@@ -1,104 +1,109 @@
 import streamlit as st
 import random
-import datetime
+from datetime import datetime, timedelta
+import time
 
-# إعدادات الصفحة بلمسة Hyper Torque
+# إعدادات الصفحة بلمسة هندسية
 st.set_page_config(page_title="Hyper Torque Academy", page_icon="⚡", layout="wide")
 
-# --- CSS لتجميل الواجهة وجعلها احترافية ---
-st.markdown("""
-    <style>
-    .main { background-color: #f5f7f9; }
-    .stButton>button { border-radius: 10px; height: 3em; background-color: #1E1E1E; color: white; }
-    .house-box { padding: 20px; border-radius: 15px; text-align: center; color: white; font-weight: bold; }
-    </style>
-    """, unsafe_allow_html=True)
+# --- 1. قاعدة بيانات النقاط (تجمع النقاط طالما التطبيق يعمل) ---
+if 'global_scores' not in st.session_state:
+    st.session_state.global_scores = {"Gryffindor 🦁": 0, "Slytherin 🐍": 0, "Hufflepuff 🦡": 0}
 
-# --- محاكاة لقاعدة البيانات (Activity Feed) ---
-if 'history' not in st.session_state:
-    st.session_state.history = []
-if 'scores' not in st.session_state:
-    st.session_state.scores = {"Gryffindor 🦁": 0, "Slytherin 🐍": 0, "Hufflepuff 🦡": 0}
+# --- 2. بنك الأسئلة (10 أسئلة - النتيجة من 10) ---
+quiz_bank = [
+    {"q": "What is the SI unit of density?", "options": ["kg/m2", "kg/m3", "N/m2"], "a": "kg/m3"},
+    {"q": "The continuity equation results from ____ conservation.", "options": ["Energy", "Mass", "Volume"], "a": "Mass"},
+    {"q": "Pascal's Principle applies to?", "options": ["Solids", "Gases only", "Confined Fluids"], "a": "Confined Fluids"},
+    {"q": "Buoyant force acts in which direction?", "options": ["Downward", "Sideways", "Upward"], "a": "Upward"},
+    {"q": "If Area decreases, Velocity ____?", "options": ["Increases", "Decreases", "Stays same"], "a": "Increases"},
+    {"q": "Archimedes' principle measures ____ force?", "options": ["Gravity", "Buoyant", "Friction"], "a": "Buoyant"},
+    {"q": "Blood is considered a fluid because it?", "options": ["Is red", "Can flow", "Contains iron"], "a": "Can flow"},
+    {"q": "In A1v1 = A2v2, if A2 is double A1, v2 is?", "options": ["Double v1", "Half v1", "Same as v1"], "a": "Half v1"},
+    {"q": "100 cm2 is equal to how many m2?", "options": ["0.1", "0.01", "1.0"], "a": "0.01"},
+    {"q": "Pressure is equal to Force divided by?", "options": ["Mass", "Volume", "Area"], "a": "Area"}
+]
 
-# --- القائمة الجانبية (Sidebar) للرقابة والعدل ---
-with st.sidebar:
-    st.image("https://img.icons8.com/ios-filled/100/ffffff/lightning-bolt.png", width=100)
-    st.title("🛡️ Integrity Hub")
+# --- 3. إدارة الحالة (State Management) ---
+if 'registered' not in st.session_state:
+    st.session_state.registered = False
+if 'quiz_started' not in st.session_state:
+    st.session_state.quiz_started = False
+if 'submitted' not in st.session_state:
+    st.session_state.submitted = False
+
+st.title("⚡ Hyper Torque Academy")
+
+# --- المرحلة الأولى: التسجيل ---
+if not st.session_state.registered:
+    st.info("⚠️ Note: Use official school name. Class format: 10-A.")
+    name = st.text_input("Full Name:")
+    s_class = st.text_input("Class (e.g. 10-A):")
+    house = st.selectbox("House:", ["Gryffindor 🦁", "Slytherin 🐍", "Hufflepuff 🦡"])
+    if st.button("Join House"):
+        if name and s_class:
+            st.session_state.user_name, st.session_state.user_house, st.session_state.registered = name, house, True
+            st.rerun()
+        else:
+            st.error("Please fill in all details.")
+
+# --- المرحلة الثانية: الباسورد والتايمر ---
+else:
+    st.success(f"Hi {st.session_state.user_name} | {st.session_state.user_house}")
     
-    st.markdown("### 🟢 Recent Activity")
-    if not st.session_state.history:
-        st.write("No activity yet. Be the first!")
-    for act in st.session_state.history[-5:]: # عرض آخر 5 دخلوا
-        st.caption(f"{act['time']} - {act['house']} {act['name']} joined.")
-    
-    st.markdown("---")
-    st.markdown("### 🎲 Challenge Tool")
-    if st.button("Generate Random Number (1-20)"):
-        num = random.randint(1, 20)
-        st.header(f"🎯 Number: {num}")
-        st.balloons()
-
-# --- الجزء الرئيسي للموقع ---
-st.title("⚡ Hyper Torque Academy: Fluid Mechanics")
-st.write("Welcome to the Hogwarts of Engineering. Solve, Lead, and Earn Points for your House.")
-
-# --- تسجيل الدخول ---
-with st.container():
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        name = st.text_input("Full Name:")
-    with col2:
-        student_class = st.text_input("Class:")
-    with col3:
-        house = st.selectbox("Your House:", ["Gryffindor 🦁", "Slytherin 🐍", "Hufflepuff 🦡"])
-
-# إضافة الدخول لشريط النشاط
-if name and house and (not st.session_state.history or st.session_state.history[-1]['name'] != name):
-    now = datetime.datetime.now().strftime("%H:%M")
-    st.session_state.history.append({"name": name, "house": house, "time": now})
-
-# --- أوضاع اللعب (Class vs Homework) ---
-tab1, tab2 = st.tabs(["🔒 Live Class Activity", "📚 Homework & Achievements"])
-
-with tab1:
-    st.header("Live Challenge")
-    code = st.text_input("Enter Session Password (From Eng. Mohamed):", type="password")
-    
-    if code == "Hyper2026": # كلمة السر للحصة
-        st.success("Access Granted. Points are 2X in Live Mode!")
-        
-        # بنك أسئلة بسيط للمثال
-        quiz_data = [
-            {"q": "What stays constant in Pascal's Principle?", "options": ["Force", "Pressure", "Area"], "a": "Pressure"},
-            {"q": "Continuity Equation is about conservation of...?", "options": ["Energy", "Mass", "Volume"], "a": "Mass"}
-        ]
-        
-        with st.form("live_quiz"):
-            score = 0
-            for i, q in enumerate(quiz_data):
-                ans = st.radio(f"Question {i+1}: {q['q']}", q['options'])
-                if ans == q['a']: score += 20 # نقط مضاعفة في الحصة
-            
-            if st.form_submit_button("Submit Live Answers"):
-                st.session_state.scores[house] += score
-                st.success(f"House {house} gained {score} points!")
+    if not st.session_state.quiz_started:
+        pwd = st.text_input("Enter Session Password to Start (15 min):", type="password")
+        if pwd == "Hyper2026":
+            st.session_state.quiz_started = True
+            st.session_state.start_time = time.time()
+            st.rerun()
+        elif pwd != "":
+            st.error("Wrong Password!")
     else:
-        st.warning("Locked. This section opens only during the session.")
-
-with tab2:
-    st.header("Practice & Achievements")
-    st.info("Complete this to strengthen your house points. (One-time achievement per week)")
-    
-    if st.button("Start Weekly Practice"):
-        st.write("Questions Loading based on Chapter 8 Material...")
-        # هنا تضع الـ 10 أسئلة اللي جهزناهم
-        st.write("✅ Practice complete. Your skills are growing!")
-
-# --- لوحة المتصدرين (Leaderboard) ---
-st.markdown("---")
-st.header("🏆 House Leaderboard")
-c1, c2, c3 = st.columns(3)
-houses = list(st.session_state.scores.keys())
-c1.metric(houses[0], f"{st.session_state.scores[houses[0]]} pts")
-c2.metric(houses[1], f"{st.session_state.scores[houses[1]]} pts")
-c3.metric(houses[2], f"{st.session_state.scores[houses[2]]} pts")
+        # حساب الوقت المتبقي
+        time_limit = 15 * 60
+        elapsed = time.time() - st.session_state.start_time
+        remaining = time_limit - elapsed
+        
+        if remaining <= 0:
+            st.error("🛑 Time's up! Session ended.")
+            st.stop()
+        
+        # عرض التايمر في الجانب
+        st.sidebar.metric("⏳ Time Remaining", f"{int(remaining // 60)}m {int(remaining % 60)}s")
+        
+        # --- المرحلة الثالثة: حل الكويز ---
+        if not st.session_state.submitted:
+            if 'random_q' not in st.session_state:
+                st.session_state.random_q = random.sample(quiz_bank, 10)
+            
+            with st.form("quiz_form"):
+                user_answers = {}
+                for i, q in enumerate(st.session_state.random_q):
+                    user_answers[i] = st.radio(f"Q{i+1}: {q['q']}", q['options'], key=f"q{i}")
+                
+                if st.form_submit_button("Submit Final Answers"):
+                    current_score = 0
+                    for i, q in enumerate(st.session_state.random_q):
+                        if user_answers[i] == q['a']:
+                            current_score += 1 # السؤال بنقطة واحدة
+                    
+                    st.session_state.final_score = current_score
+                    st.session_state.global_scores[st.session_state.user_house] += current_score
+                    st.session_state.submitted = True
+                    st.rerun()
+        
+        # --- المرحلة الرابعة: النتيجة والـ Leaderboard ---
+        else:
+            st.header(f"🎯 Your Result: {st.session_state.final_score} / 10 Points")
+            st.balloons()
+            
+            st.markdown("---")
+            st.header("🏆 Live House Leaderboard (Weekly Total)")
+            cols = st.columns(3)
+            for i, (h, s) in enumerate(st.session_state.global_scores.items()):
+                cols[i].metric(h, f"{s} Points Total")
+            
+            if st.button("Practice Again"):
+                st.session_state.submitted = False
+                st.rerun()
