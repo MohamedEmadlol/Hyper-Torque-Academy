@@ -1,16 +1,18 @@
 import streamlit as st
 import random
-from datetime import datetime, timedelta
 import time
+from datetime import datetime
 
-# إعدادات الصفحة بلمسة هندسية
-st.set_page_config(page_title="Hyper Torque Academy", page_icon="⚡", layout="wide")
+# إعدادات الصفحة
+st.set_page_config(page_title="Hyper Torque Admin System", page_icon="⚡", layout="wide")
 
-# --- 1. قاعدة بيانات النقاط (تجمع النقاط طالما التطبيق يعمل) ---
+# --- 1. قاعدة بيانات النظام (تخزين مؤقت للديمو) ---
 if 'global_scores' not in st.session_state:
     st.session_state.global_scores = {"Gryffindor 🦁": 0, "Slytherin 🐍": 0, "Hufflepuff 🦡": 0}
+if 'student_logs' not in st.session_state:
+    st.session_state.student_logs = [] # سجل درجات الطلاب
 
-# --- 2. بنك الأسئلة (10 أسئلة - النتيجة من 10) ---
+# --- 2. بنك الأسئلة ---
 quiz_bank = [
     {"q": "What is the SI unit of density?", "options": ["kg/m2", "kg/m3", "N/m2"], "a": "kg/m3"},
     {"q": "The continuity equation results from ____ conservation.", "options": ["Energy", "Mass", "Volume"], "a": "Mass"},
@@ -24,86 +26,96 @@ quiz_bank = [
     {"q": "Pressure is equal to Force divided by?", "options": ["Mass", "Volume", "Area"], "a": "Area"}
 ]
 
-# --- 3. إدارة الحالة (State Management) ---
-if 'registered' not in st.session_state:
-    st.session_state.registered = False
-if 'quiz_started' not in st.session_state:
-    st.session_state.quiz_started = False
-if 'submitted' not in st.session_state:
-    st.session_state.submitted = False
+# --- 3. القائمة الجانبية (Admin Panel) ---
+st.sidebar.title("🛠️ Teacher Control")
+admin_pass = st.sidebar.text_input("Admin Password:", type="password")
 
-st.title("⚡ Hyper Torque Academy")
-
-# --- المرحلة الأولى: التسجيل ---
-if not st.session_state.registered:
-    st.info("⚠️ Note: Use official school name. Class format: 10-A.")
-    name = st.text_input("Full Name:")
-    s_class = st.text_input("Class (e.g. 10-A):")
-    house = st.selectbox("House:", ["Gryffindor 🦁", "Slytherin 🐍", "Hufflepuff 🦡"])
-    if st.button("Join House"):
-        if name and s_class:
-            st.session_state.user_name, st.session_state.user_house, st.session_state.registered = name, house, True
-            st.rerun()
-        else:
-            st.error("Please fill in all details.")
-
-# --- المرحلة الثانية: الباسورد والتايمر ---
+if admin_pass == "Admin2026": # باسوورد المدرس
+    st.sidebar.success("Logged in as Admin")
+    mode = st.sidebar.radio("Navigate to:", ["Student View", "Teacher Dashboard", "Manual Score Adjust"])
 else:
-    st.success(f"Hi {st.session_state.user_name} | {st.session_state.user_house}")
-    
-    if not st.session_state.quiz_started:
-        pwd = st.text_input("Enter Session Password to Start (15 min):", type="password")
-        if pwd == "Hyper2026":
-            st.session_state.quiz_started = True
-            st.session_state.start_time = time.time()
-            st.rerun()
-        elif pwd != "":
-            st.error("Wrong Password!")
+    mode = "Student View"
+
+# --- 4. وضع المدرس (Teacher Dashboard) ---
+if mode == "Teacher Dashboard":
+    st.header("📊 Detailed Student Results")
+    if st.session_state.student_logs:
+        import pandas as pd
+        df = pd.DataFrame(st.session_state.student_logs)
+        
+        # فلترة حسب الفصل
+        selected_class = st.selectbox("Filter by Class:", ["All", "Grade 12 A", "Grade 12 B", "Grade 12 C"])
+        if selected_class != "All":
+            df = df[df['Class'] == selected_class]
+        
+        st.table(df)
     else:
-        # حساب الوقت المتبقي
-        time_limit = 15 * 60
-        elapsed = time.time() - st.session_state.start_time
-        remaining = time_limit - elapsed
+        st.info("No records found yet.")
+
+elif mode == "Manual Score Adjust":
+    st.header("⚖️ Manual Points Adjustment")
+    target_house = st.selectbox("Select House to Adjust:", list(st.session_state.global_scores.keys()))
+    points_to_add = st.number_input("Points (+/-):", value=0)
+    if st.button("Update Points"):
+        st.session_state.global_scores[target_house] += points_to_add
+        st.success(f"Updated {target_house} by {points_to_add} points.")
+
+# --- 5. وضع الطالب (Student View) ---
+else:
+    if 'registered' not in st.session_state:
+        st.session_state.registered = False
+    
+    if not st.session_state.registered:
+        st.info("📅 Today is: " + datetime.now().strftime("%A, %d %B %Y"))
+        name = st.text_input("Full Name (Official):")
+        s_class = st.selectbox("Select Your Class:", ["Grade 12 A", "Grade 12 B", "Grade 12 C"])
+        house = st.selectbox("House:", ["Gryffindor 🦁", "Slytherin 🐍", "Hufflepuff 🦡"])
+        if st.button("Enter Quiz"):
+            if name:
+                st.session_state.user_name, st.session_state.user_class, st.session_state.user_house, st.session_state.registered = name, s_class, house, True
+                st.rerun()
+    else:
+        # الكويز (نفس المنطق السابق مع إضافة الوقت)
+        if 'quiz_started' not in st.session_state:
+            st.session_state.quiz_started = False
         
-        if remaining <= 0:
-            st.error("🛑 Time's up! Session ended.")
-            st.stop()
-        
-        # عرض التايمر في الجانب
-        st.sidebar.metric("⏳ Time Remaining", f"{int(remaining // 60)}m {int(remaining % 60)}s")
-        
-        # --- المرحلة الثالثة: حل الكويز ---
-        if not st.session_state.submitted:
+        if not st.session_state.quiz_started:
+            pwd = st.text_input("Enter Session Password:", type="password")
+            if pwd == "Hyper2026":
+                st.session_state.quiz_started = True
+                st.session_state.start_time = time.time()
+                st.rerun()
+        else:
+            # تايمر وأسئلة
+            remaining = (15 * 60) - (time.time() - st.session_state.start_time)
+            if remaining <= 0:
+                st.error("Time Up!")
+                st.stop()
+            
+            st.sidebar.metric("⏳ Time Left", f"{int(remaining//60)}m {int(remaining%60)}s")
+            
             if 'random_q' not in st.session_state:
                 st.session_state.random_q = random.sample(quiz_bank, 10)
             
-            with st.form("quiz_form"):
-                user_answers = {}
+            with st.form("quiz"):
+                answers = {}
                 for i, q in enumerate(st.session_state.random_q):
-                    user_answers[i] = st.radio(f"Q{i+1}: {q['q']}", q['options'], key=f"q{i}")
+                    answers[i] = st.radio(f"Q{i+1}: {q['q']}", q['options'], key=f"q{i}")
                 
-                if st.form_submit_button("Submit Final Answers"):
-                    current_score = 0
-                    for i, q in enumerate(st.session_state.random_q):
-                        if user_answers[i] == q['a']:
-                            current_score += 1 # السؤال بنقطة واحدة
+                if st.form_submit_button("Submit"):
+                    score = sum(1 for i, q in enumerate(st.session_state.random_q) if answers[i] == q['a'])
                     
-                    st.session_state.final_score = current_score
-                    st.session_state.global_scores[st.session_state.user_house] += current_score
-                    st.session_state.submitted = True
-                    st.rerun()
-        
-        # --- المرحلة الرابعة: النتيجة والـ Leaderboard ---
-        else:
-            st.header(f"🎯 Your Result: {st.session_state.final_score} / 10 Points")
-            st.balloons()
-            
-            st.markdown("---")
-            st.header("🏆 Live House Leaderboard (Weekly Total)")
-            cols = st.columns(3)
-            for i, (h, s) in enumerate(st.session_state.global_scores.items()):
-                cols[i].metric(h, f"{s} Points Total")
-            
-            if st.button("Practice Again"):
-                st.session_state.submitted = False
-                st.rerun()
+                    # تسجيل البيانات مع الوقت والتاريخ
+                    log_entry = {
+                        "Student": st.session_state.user_name,
+                        "Class": st.session_state.user_class,
+                        "House": st.session_state.user_house,
+                        "Score": f"{score}/10",
+                        "Date": datetime.now().strftime("%Y-%m-%d"),
+                        "Time": datetime.now().strftime("%H:%M:%S")
+                    }
+                    st.session_state.student_logs.append(log_entry)
+                    st.session_state.global_scores[st.session_state.user_house] += score
+                    
+                    st.success(f"Score: {score}/10. Points added to {st.session_state.user_house}!")
+                    st.balloons()
