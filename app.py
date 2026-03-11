@@ -118,7 +118,7 @@ st.session_state.global_scores = global_scores
 
 # --- 6. Sidebar (النشاط الأخير + ساعة القاهرة) ---
 with st.sidebar:
-    st.markdown("## ⚡ HYPER TORQUE PRO")
+    st.markdown("## ⚡ HYPER TORQUE ACADEMY")
     st.markdown(f"**🕒 Clock:** `{datetime.now(egy_tz).strftime('%I:%M:%S %p')}`")
     st.markdown("---")
     st.markdown("### 🟢 Recent Activity")
