@@ -7,7 +7,7 @@ from datetime import datetime
 import pytz
 
 # --- 1. الإعدادات والبراندنج ---
-st.set_page_config(page_title="Hyper Torque Pro LMS", page_icon="⚡", layout="wide")
+st.set_page_config(page_title="Hyper Torque Academy", page_icon="⚡", layout="wide")
 
 st.markdown("""
     <style>
