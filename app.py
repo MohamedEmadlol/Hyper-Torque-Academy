@@ -3,119 +3,158 @@ import random
 import time
 from datetime import datetime
 
-# إعدادات الصفحة
-st.set_page_config(page_title="Hyper Torque Admin System", page_icon="⚡", layout="wide")
+# 1. إعدادات الصفحة والتصميم (The Branding & Design)
+st.set_page_config(page_title="Hyper Torque Academy", page_icon="⚡", layout="wide")
 
-# --- 1. قاعدة بيانات النظام (تخزين مؤقت للديمو) ---
+# تصميم CSS احترافي للخلفية والألوان (Dark & Sleek Theme)
+st.markdown("""
+    <style>
+    .main {
+        background-color: #0e1117;
+        color: #ffffff;
+    }
+    .stButton>button {
+        width: 100%;
+        border-radius: 20px;
+        height: 3em;
+        background-color: #ff4b4b;
+        color: white;
+        font-weight: bold;
+        border: none;
+    }
+    .stTextInput>div>div>input {
+        background-color: #262730;
+        color: white;
+        border-radius: 10px;
+    }
+    .house-card {
+        padding: 20px;
+        border-radius: 15px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        text-align: center;
+    }
+    h1 { color: #ff4b4b; text-align: center; font-family: 'Arial Black'; }
+    </style>
+    """, unsafe_allow_html=True)
+
+# --- 2. البيانات الأساسية ---
 if 'global_scores' not in st.session_state:
     st.session_state.global_scores = {"Gryffindor 🦁": 0, "Slytherin 🐍": 0, "Hufflepuff 🦡": 0}
 if 'student_logs' not in st.session_state:
-    st.session_state.student_logs = [] # سجل درجات الطلاب
+    st.session_state.student_logs = []
 
-# --- 2. بنك الأسئلة ---
-quiz_bank = [
-    {"q": "What is the SI unit of density?", "options": ["kg/m2", "kg/m3", "N/m2"], "a": "kg/m3"},
-    {"q": "The continuity equation results from ____ conservation.", "options": ["Energy", "Mass", "Volume"], "a": "Mass"},
-    {"q": "Pascal's Principle applies to?", "options": ["Solids", "Gases only", "Confined Fluids"], "a": "Confined Fluids"},
-    {"q": "Buoyant force acts in which direction?", "options": ["Downward", "Sideways", "Upward"], "a": "Upward"},
-    {"q": "If Area decreases, Velocity ____?", "options": ["Increases", "Decreases", "Stays same"], "a": "Increases"},
-    {"q": "Archimedes' principle measures ____ force?", "options": ["Gravity", "Buoyant", "Friction"], "a": "Buoyant"},
-    {"q": "Blood is considered a fluid because it?", "options": ["Is red", "Can flow", "Contains iron"], "a": "Can flow"},
-    {"q": "In A1v1 = A2v2, if A2 is double A1, v2 is?", "options": ["Double v1", "Half v1", "Same as v1"], "a": "Half v1"},
-    {"q": "100 cm2 is equal to how many m2?", "options": ["0.1", "0.01", "1.0"], "a": "0.01"},
-    {"q": "Pressure is equal to Force divided by?", "options": ["Mass", "Volume", "Area"], "a": "Area"}
-]
-
-# --- 3. القائمة الجانبية (Admin Panel) ---
-st.sidebar.title("🛠️ Teacher Control")
-admin_pass = st.sidebar.text_input("Admin Password:", type="password")
-
-if admin_pass == "Admin2026": # باسوورد المدرس
-    st.sidebar.success("Logged in as Admin")
-    mode = st.sidebar.radio("Navigate to:", ["Student View", "Teacher Dashboard", "Manual Score Adjust"])
-else:
-    mode = "Student View"
-
-# --- 4. وضع المدرس (Teacher Dashboard) ---
-if mode == "Teacher Dashboard":
-    st.header("📊 Detailed Student Results")
-    if st.session_state.student_logs:
-        import pandas as pd
-        df = pd.DataFrame(st.session_state.student_logs)
-        
-        # فلترة حسب الفصل
-        selected_class = st.selectbox("Filter by Class:", ["All", "Grade 12 A", "Grade 12 B", "Grade 12 C"])
-        if selected_class != "All":
-            df = df[df['Class'] == selected_class]
-        
-        st.table(df)
+# --- 3. لوحة تحكم المدرس (Sidebar Admin) ---
+with st.sidebar:
+    st.markdown("# ⚡ Hyper Torque")
+    st.markdown("---")
+    admin_pass = st.text_input("Teacher Access:", type="password")
+    if admin_pass == "Admin2026":
+        st.success("Admin Mode Active")
+        mode = st.radio("Navigation:", ["Student View", "Teacher Dashboard", "Points Control"])
     else:
-        st.info("No records found yet.")
+        mode = "Student View"
 
-elif mode == "Manual Score Adjust":
-    st.header("⚖️ Manual Points Adjustment")
-    target_house = st.selectbox("Select House to Adjust:", list(st.session_state.global_scores.keys()))
-    points_to_add = st.number_input("Points (+/-):", value=0)
-    if st.button("Update Points"):
-        st.session_state.global_scores[target_house] += points_to_add
-        st.success(f"Updated {target_house} by {points_to_add} points.")
-
-# --- 5. وضع الطالب (Student View) ---
-else:
+# --- 4. وضع الطالب (Main View) ---
+if mode == "Student View":
+    # عرض اللوجو والترحيب
+    st.markdown("<h1>⚡ HYPER TORQUE ACADEMY</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #888;'>Excellence in Physics & Engineering</p>", unsafe_allow_html=True)
+    
     if 'registered' not in st.session_state:
         st.session_state.registered = False
-    
+
     if not st.session_state.registered:
-        st.info("📅 Today is: " + datetime.now().strftime("%A, %d %B %Y"))
-        name = st.text_input("Full Name (Official):")
-        s_class = st.selectbox("Select Your Class:", ["Grade 12 A", "Grade 12 B", "Grade 12 C"])
-        house = st.selectbox("House:", ["Gryffindor 🦁", "Slytherin 🐍", "Hufflepuff 🦡"])
-        if st.button("Enter Quiz"):
-            if name:
-                st.session_state.user_name, st.session_state.user_class, st.session_state.user_house, st.session_state.registered = name, s_class, house, True
-                st.rerun()
+        with st.container():
+            st.markdown("### 📝 Enter Your Credentials")
+            name = st.text_input("Full Official Name:")
+            s_class = st.selectbox("Your Class:", ["Grade 12 A", "Grade 12 B", "Grade 12 C"])
+            house = st.selectbox("House Alignment:", ["Gryffindor 🦁", "Slytherin 🐍", "Hufflepuff 🦡"])
+            
+            if st.button("Initialize"):
+                if name:
+                    st.session_state.user_name, st.session_state.user_class, st.session_state.user_house, st.session_state.registered = name, s_class, house, True
+                    st.rerun()
     else:
-        # الكويز (نفس المنطق السابق مع إضافة الوقت)
+        # الترحيب الشخصي "أهلاً بك يا فلان"
+        st.markdown(f"### 🎊 Welcome, **{st.session_state.user_name}**")
+        st.markdown(f"🛡️ Member of House: **{st.session_state.user_house}** | 📍 Class: **{st.session_state.user_class}**")
+        
+        # بوابة الباسورد
         if 'quiz_started' not in st.session_state:
             st.session_state.quiz_started = False
         
         if not st.session_state.quiz_started:
-            pwd = st.text_input("Enter Session Password:", type="password")
-            if pwd == "Hyper2026":
-                st.session_state.quiz_started = True
-                st.session_state.start_time = time.time()
-                st.rerun()
+            st.markdown("---")
+            pwd = st.text_input("Session Authorization Code:", type="password")
+            if st.button("Start Challenge"):
+                if pwd == "Hyper2026":
+                    st.session_state.quiz_started = True
+                    st.session_state.start_time = time.time()
+                    st.rerun()
+                else:
+                    st.error("Access Denied.")
         else:
-            # تايمر وأسئلة
-            remaining = (15 * 60) - (time.time() - st.session_state.start_time)
-            if remaining <= 0:
-                st.error("Time Up!")
+            # تايمر حي وأسئلة
+            rem = (15 * 60) - (time.time() - st.session_state.start_time)
+            if rem <= 0:
+                st.error("🛑 Time's up! Session Terminated.")
                 st.stop()
             
-            st.sidebar.metric("⏳ Time Left", f"{int(remaining//60)}m {int(remaining%60)}s")
+            st.sidebar.metric("⏳ Timer", f"{int(rem//60)}:{int(rem%60):02d}")
             
+            st.markdown("### 📝 Fluid Mechanics Quiz")
+            # بنك الأسئلة (نفس الـ 10 السابقة)
+            quiz_bank = [
+                {"q": "What is the SI unit of density?", "options": ["kg/m2", "kg/m3", "N/m2"], "a": "kg/m3"},
+                {"q": "Continuity equation is based on?", "options": ["Energy", "Mass", "Volume"], "a": "Mass"},
+                {"q": "Pascal's Principle applies to?", "options": ["Solids", "Gases", "Confined Fluids"], "a": "Confined Fluids"},
+                {"q": "Buoyant force direction?", "options": ["Down", "Up", "Side"], "a": "Up"},
+                {"q": "If Area decreases, Velocity?", "options": ["Up", "Down", "Same"], "a": "Up"},
+                {"q": "Archimedes' measures?", "options": ["Gravity", "Buoyant", "Friction"], "a": "Buoyant"},
+                {"q": "Why is blood a fluid?", "options": ["Red", "Flows", "Iron"], "a": "Flows"},
+                {"q": "If Area doubles, Velocity?", "options": ["Double", "Half", "Same"], "a": "Half"},
+                {"q": "100 cm2 to m2?", "options": ["0.1", "0.01", "1.0"], "a": "0.01"},
+                {"q": "Pressure = Force / ?", "options": ["Mass", "Volume", "Area"], "a": "Area"}
+            ]
+
             if 'random_q' not in st.session_state:
                 st.session_state.random_q = random.sample(quiz_bank, 10)
-            
+
             with st.form("quiz"):
-                answers = {}
+                ans = {}
                 for i, q in enumerate(st.session_state.random_q):
-                    answers[i] = st.radio(f"Q{i+1}: {q['q']}", q['options'], key=f"q{i}")
+                    ans[i] = st.radio(f"Q{i+1}: {q['q']}", q['options'], key=f"q{i}")
                 
-                if st.form_submit_button("Submit"):
-                    score = sum(1 for i, q in enumerate(st.session_state.random_q) if answers[i] == q['a'])
-                    
-                    # تسجيل البيانات مع الوقت والتاريخ
-                    log_entry = {
-                        "Student": st.session_state.user_name,
-                        "Class": st.session_state.user_class,
-                        "House": st.session_state.user_house,
-                        "Score": f"{score}/10",
-                        "Date": datetime.now().strftime("%Y-%m-%d"),
-                        "Time": datetime.now().strftime("%H:%M:%S")
-                    }
-                    st.session_state.student_logs.append(log_entry)
+                if st.form_submit_button("Submit Deployment"):
+                    score = sum(1 for i, q in enumerate(st.session_state.random_q) if ans[i] == q['a'])
+                    # تسجيل البيانات
+                    st.session_state.student_logs.append({
+                        "Student": st.session_state.user_name, "Class": st.session_state.user_class,
+                        "House": st.session_state.user_house, "Score": score,
+                        "Time": datetime.now().strftime("%Y-%m-%d %H:%M")
+                    })
                     st.session_state.global_scores[st.session_state.user_house] += score
-                    
-                    st.success(f"Score: {score}/10. Points added to {st.session_state.user_house}!")
+                    st.success(f"Mission Accomplished! Score: {score}/10")
                     st.balloons()
+
+# --- 5. لوحة التحكم (Dashboard View) ---
+elif mode == "Teacher Dashboard":
+    st.header("📊 Intelligence Report")
+    import pandas as pd
+    if st.session_state.student_logs:
+        df = pd.DataFrame(st.session_state.student_logs)
+        selected_cls = st.selectbox("Class Filter:", ["All"] + list(df['Class'].unique()))
+        if selected_cls != "All":
+            df = df[df['Class'] == selected_cls]
+        st.dataframe(df, use_container_width=True)
+    else:
+        st.info("No active logs yet.")
+
+elif mode == "Points Control":
+    st.header("⚖️ Score Adjustment")
+    h = st.selectbox("Select House:", list(st.session_state.global_scores.keys()))
+    val = st.number_input("Points Adjustment:", value=0)
+    if st.button("Update"):
+        st.session_state.global_scores[h] += val
+        st.success(f"Modified {h} by {val} pts.")
