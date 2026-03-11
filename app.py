@@ -1,11 +1,9 @@
 import streamlit as st
 import random
 import time
-import pandas as pd
-import os
 from datetime import datetime
 
-# --- 1. إعدادات التصميم والبراندنج ---
+# --- 1. الإعدادات والتصميم ---
 st.set_page_config(page_title="Hyper Torque Pro LMS", page_icon="⚡", layout="wide")
 
 st.markdown("""
@@ -17,21 +15,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. نظام حفظ واستعادة البيانات (Persistent Database) ---
-def save_log_to_csv(entry):
-    file_path = 'student_logs.csv'
-    df = pd.DataFrame([entry])
-    if not os.path.isfile(file_path):
-        df.to_csv(file_path, index=False)
-    else:
-        df.to_csv(file_path, mode='a', header=False, index=False)
-
-def load_logs():
-    if os.path.isfile('student_logs.csv'):
-        return pd.read_csv('student_logs.csv').to_dict('records')
-    return []
-
-# --- 3. مخزن الأسئلة (زود هنا براحتك) ---
+# --- 2. مخزن الأسئلة (المكان اللي هتزود فيه براحتك) ---
 def get_quiz_questions(lesson):
     if lesson == "Fluid Mechanics 🌊":
         return [
@@ -48,31 +32,27 @@ def get_quiz_questions(lesson):
         ]
     elif lesson == "Electricity ⚡":
         return [
-            {"q": "What is the unit of electric current?", "options": ["Volt", "Ampere", "Ohm"], "a": "Ampere"},
-            # أضف بقية أسئلة الكهرباء هنا بنفس التنسيق
+            {"q": "Question 1 for Electricity...", "options": ["A", "B", "C"], "a": "A"},
+            # زود هنا باقي الـ 10 أسئلة لما تجهز الماتريال
         ]
     return []
 
-# --- 4. تهيئة الجلسة (Session Initialization) ---
+# --- 3. تهيئة قواعد البيانات المؤقتة ---
 if 'student_db' not in st.session_state:
     st.session_state.student_db = {"Mohamed Emad": "12-A", "Ahmed Ali": "12-B", "Sara Hassan": "12-A"}
-if 'student_records' not in st.session_state:
-    st.session_state.student_records = load_logs() # تحميل البيانات من الملف
 if 'global_scores' not in st.session_state:
-    # حساب النقاط بناءً على السجلات المحملة
-    scores = {"Gryffindor 🦁": 0, "Slytherin 🐍": 0, "Hufflepuff 🦡": 0}
-    for rec in st.session_state.student_records:
-        scores[rec['House']] += int(rec['Score'].split('/')[0])
-    st.session_state.global_scores = scores
-
-if 'view' not in st.session_state: st.session_state.view = "login"
+    st.session_state.global_scores = {"Gryffindor 🦁": 0, "Slytherin 🐍": 0, "Hufflepuff 🦡": 0}
+if 'student_records' not in st.session_state:
+    st.session_state.student_records = []
 if 'finished_students' not in st.session_state:
-    st.session_state.finished_students = {rec['Student'] for rec in st.session_state.student_records}
+    st.session_state.finished_students = set()
+if 'view' not in st.session_state:
+    st.session_state.view = "login"
 
-# --- 5. Sidebar (Admin & Live Clock) ---
+# --- 4. Sidebar (Live Clock & Admin) ---
 with st.sidebar:
     st.markdown("### ⚡ HYPER TORQUE PRO")
-    st.markdown(f"**🕒 Clock:** `{datetime.now().strftime('%I:%M:%S %p')}`")
+    st.markdown(f"**🕒 Server Time:** `{datetime.now().strftime('%I:%M:%S %p')}`")
     st.markdown("---")
     if st.button("🏠 Global Dashboard"):
         st.session_state.view = "dashboard"
@@ -81,73 +61,95 @@ with st.sidebar:
     admin_pwd = st.text_input("Admin Access:", type="password")
     is_admin = (admin_pwd == "Admin2026")
 
-# --- 6. الصفحات ---
+# --- 5. منطق الصفحات ---
+# [A] وضع المدرس
 if is_admin:
     st.title("🛠️ COMMAND CENTER")
-    t1, t2, t3, t4 = st.tabs(["Scores Log", "House Points", "Schedule", "Manual Adjust"])
-    with t1:
-        if st.session_state.student_records:
-            st.table(pd.DataFrame(st.session_state.student_records))
-        else: st.info("No logs.")
-    with t4:
+    tabs = st.tabs(["Scores Log", "House Points", "Schedules"])
+    with tabs[0]:
+        import pandas as pd
+        if st.session_state.student_records: st.table(pd.DataFrame(st.session_state.student_records))
+        else: st.info("No records yet.")
+    with tabs[1]:
         h_sel = st.selectbox("House:", list(st.session_state.global_scores.keys()))
         adj = st.number_input("Adjust (+/-):", value=0)
-        if st.button("Apply"):
-            st.session_state.global_scores[h_sel] += adj; st.success("Updated!")
+        if st.button("Apply Changes"):
+            st.session_state.global_scores[h_sel] += adj
+            st.success("Updated!")
 
+# [B] الـ Dashboard العام
 elif st.session_state.view == "dashboard":
     st.header("🏆 Live House Rankings")
     cols = st.columns(3)
     for i, (h, s) in enumerate(st.session_state.global_scores.items()):
         cols[i].metric(h, f"{s} Pts")
-    if st.button("Back to Login"): st.session_state.view = "login"; st.rerun()
+    if st.button("Return to Login"):
+        st.session_state.view = "login"
+        st.rerun()
 
+# [C] وضع الطالب
 else:
-    # [نظام الطالب: لوجن -> اختيار درس -> واجب أو كويز]
     if 'logged_in_student' not in st.session_state:
         st.markdown("<h1>⚡ STUDENT LOGIN</h1>", unsafe_allow_html=True)
         login_name = st.text_input("Full Name:")
-        if st.button("Login"):
+        if st.button("Access System"):
             if login_name in st.session_state.student_db:
                 if login_name in st.session_state.finished_students:
-                    st.error("Attempt already recorded!")
+                    st.error("Already completed!")
                 else:
                     st.session_state.logged_in_student = login_name
                     st.session_state.user_house = random.choice(["Gryffindor 🦁", "Slytherin 🐍", "Hufflepuff 🦡"])
                     st.rerun()
-            else: st.error("Access Denied.")
+            else: st.error("Name not in Database.")
+    
     else:
-        st.markdown(f"### 🎊 Welcome, {st.session_state.logged_in_student}")
+        st.markdown(f"### 🎊 Welcome, {st.session_state.logged_in_student} ({st.session_state.user_house})")
         choice = st.radio("Activity:", ["Live Quiz 📝", "Assignment 📚"])
         lesson_choice = st.selectbox("Lesson:", ["Fluid Mechanics 🌊", "Electricity ⚡"])
-
+        
+        # --- بوابة الكويز ---
         if choice == "Live Quiz 📝":
             if 'quiz_active' not in st.session_state: st.session_state.quiz_active = False
+            
             if not st.session_state.quiz_active:
-                if st.text_input("Quiz Key:", type="password") == "Hyper2026":
-                    if st.button("Start"):
+                quiz_key = st.text_input("Enter Quiz Key:", type="password")
+                if st.button("Start Quiz"):
+                    if quiz_key == "Hyper2026":
                         st.session_state.quiz_active = True
                         st.session_state.start_time = time.time()
-                        st.session_state.q_list = random.sample(get_quiz_questions(lesson_choice), 10)
+                        st.session_state.current_questions = random.sample(get_quiz_questions(lesson_choice), 10)
                         st.rerun()
             else:
-                rem = (15*60) - (time.time() - st.session_state.start_time)
-                if rem <= 0: st.session_state.quiz_active = False; st.rerun()
+                rem = (15 * 60) - (time.time() - st.session_state.start_time)
+                if rem <= 0:
+                    st.error("Time Up!"); st.session_state.finished_students.add(st.session_state.logged_in_student)
+                    st.session_state.quiz_active = False; st.rerun()
+                
                 st.sidebar.metric("⏳ Timer", f"{int(rem//60)}:{int(rem%60):02d}")
-                with st.form("q_form"):
-                    ans = {i: st.radio(f"Q{i+1}: {q['q']}", q['options']) for i, q in enumerate(st.session_state.q_list)}
-                    if st.form_submit_button("Submit"):
-                        score = sum(1 for i, q in enumerate(st.session_state.q_list) if ans[i] == q['a'])
-                        entry = {"Student": st.session_state.logged_in_student, "House": st.session_state.user_house, "Score": f"{score}/10", "Date": datetime.now().strftime("%Y-%m-%d %H:%M")}
-                        save_log_to_csv(entry) # الحفظ في الملف
-                        st.session_state.student_records.append(entry)
+                with st.form("quiz_form"):
+                    user_ans = {}
+                    for i, q in enumerate(st.session_state.current_questions):
+                        user_ans[i] = st.radio(f"Q{i+1}: {q['q']}", q['options'], key=f"q{i}")
+                    if st.form_submit_button("Submit Answers"):
+                        score = sum(1 for i, q in enumerate(st.session_state.current_questions) if user_ans[i] == q['a'])
+                        st.session_state.student_records.append({
+                            "Student": st.session_state.logged_in_student, "Lesson": lesson_choice,
+                            "Score": f"{score}/10", "Date": datetime.now().strftime("%Y-%m-%d %H:%M")
+                        })
                         st.session_state.global_scores[st.session_state.user_house] += score
                         st.session_state.finished_students.add(st.session_state.logged_in_student)
-                        st.session_state.quiz_active = False; st.session_state.view = "dashboard"; st.rerun()
+                        st.session_state.quiz_active = False
+                        st.session_state.view = "dashboard"
+                        st.rerun()
         
+        # --- بوابة الواجب ---
         elif choice == "Assignment 📚":
-            for q in get_quiz_questions(lesson_choice):
+            st.info(f"Viewing Assignment for {lesson_choice}. (Points for practice, not house totals)")
+            questions = get_quiz_questions(lesson_choice)
+            for q in questions:
                 st.write(f"**{q['q']}**")
-                st.radio("Options:", q['options'], key="as_"+q['q'])
+                st.radio("Select:", q['options'], key="assign_"+q['q'])
 
-        if st.button("Logout"): del st.session_state.logged_in_student; st.rerun()
+        if st.button("Logout"):
+            del st.session_state.logged_in_student
+            st.rerun()
