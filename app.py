@@ -51,26 +51,22 @@ CLASS_HOUSES = {
 }
 
 # --- 4. مخزن الأسئلة (مقسم حسب الدروس) ---
-# ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️
-# 📌 هنا بتضيف الدروس والأسئلة الجديدة
-# 📌 كل درس في قائمة منفصلة، وبيتم اختيار 10 أسئلة عشوائية من الدرس المختار
-# ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️
 def get_questions_by_lesson():
     return {
         # ============================================
         # 📚 Fluid Mechanics (دروس الفيزياء الحالية)
         # ============================================
         "Fluid Mechanics 🌊": [
-            {"01q": "What is the SI unit of density?", "options": ["kg/m2", "kg/m3", "N/m2"], "a": "kg/m3"},
-            {"02q": "The continuity equation results from ____ conservation.", "options": ["Energy", "Mass", "Volume"], "a": "Mass"},
-            {"03q": "Pascal's Principle applies to?", "options": ["Solids", "Gases", "Confined Fluids"], "a": "Confined Fluids"},
-            {"04q": "Buoyant force direction?", "options": ["Down", "Up", "Side"], "a": "Up"},
-            {"05q": "If Area decreases, Velocity?", "options": ["Up", "Down", "Same"], "a": "Up"},
-            {"06q": "Archimedes' principle measures ____ force?", "options": ["Gravity", "Buoyant", "Friction"], "a": "Buoyant"},
-            {"07q": "Viscosity measures?", "options": ["Flow resistance", "Density", "Pressure"], "a": "Flow resistance"},
-            {"08q": "100 cm2 to m2?", "options": ["0.1", "0.01", "1.0"], "a": "0.01"},
-            {"09q": "Pressure = Force / ?", "options": ["Mass", "Volume", "Area"], "a": "Area"},
-            {"10q": "Bernoulli's equation relates to?", "options": ["Energy", "Momentum", "Force"], "a": "Energy"},
+            {"q": "What is the SI unit of density?", "options": ["kg/m2", "kg/m3", "N/m2"], "a": "kg/m3"},
+            {"q": "The continuity equation results from ____ conservation.", "options": ["Energy", "Mass", "Volume"], "a": "Mass"},
+            {"q": "Pascal's Principle applies to?", "options": ["Solids", "Gases", "Confined Fluids"], "a": "Confined Fluids"},
+            {"q": "Buoyant force direction?", "options": ["Down", "Up", "Side"], "a": "Up"},
+            {"q": "If Area decreases, Velocity?", "options": ["Increases", "Decreases", "Same"], "a": "Increases"},
+            {"q": "Archimedes' principle measures ____ force?", "options": ["Gravity", "Buoyant", "Friction"], "a": "Buoyant"},
+            {"q": "Viscosity measures?", "options": ["Flow resistance", "Density", "Pressure"], "a": "Flow resistance"},
+            {"q": "100 cm2 to m2?", "options": ["0.1", "0.01", "1.0"], "a": "0.01"},
+            {"q": "Pressure = Force / ?", "options": ["Mass", "Volume", "Area"], "a": "Area"},
+            {"q": "Bernoulli's equation relates to?", "options": ["Energy", "Momentum", "Force"], "a": "Energy"},
         ],
         
         # ============================================
@@ -126,7 +122,8 @@ with st.sidebar:
     if st.session_state.records:
         student_only = [r for r in st.session_state.records if r['Student'] != "ADMIN_ADJUST"]
         for log in reversed(student_only[-5:]):
-            st.caption(f"📅 {log['Date']} | {log['Time']}")
+            # ⚠️ ⚠️ ⚠️ هنا تم إضافة اليوم جنب التاريخ ⚠️ ⚠️ ⚠️
+            st.caption(f"📅 {log['Date']} ({log['Day']}) | {log['Time']}")
             st.write(f"✅ **{log['Student']}** ({log['Class']}) - `{log['Score']}`")
             st.markdown("---")
     
@@ -146,7 +143,15 @@ if is_admin:
         adj = st.number_input("Adjust:", value=0)
         if st.button("Apply"):
             now_egy = datetime.now(egy_tz)
-            entry = {"Student": "ADMIN_ADJUST", "Class": "SYSTEM", "House": h_sel, "Score": adj, "Date": now_egy.strftime("%Y-%m-%d"), "Time": now_egy.strftime("%I:%M:%S %p")}
+            entry = {
+                "Student": "ADMIN_ADJUST", 
+                "Class": "SYSTEM", 
+                "House": h_sel, 
+                "Score": adj, 
+                "Day": now_egy.strftime("%A"),  # ⚠️ إضافة اليوم
+                "Date": now_egy.strftime("%Y-%m-%d"), 
+                "Time": now_egy.strftime("%I:%M:%S %p")
+            }
             save_log_to_csv(entry); st.session_state.records.append(entry); st.rerun()
 
 elif st.session_state.page == "dashboard":
@@ -215,6 +220,7 @@ else:
                                 "House": st.session_state.u_house, 
                                 "Score": f"{score}/10", 
                                 "Lesson": st.session_state.selected_lesson,
+                                "Day": now_egy.strftime("%A"),  # ⚠️ إضافة اليوم
                                 "Date": now_egy.strftime("%Y-%m-%d"), 
                                 "Time": now_egy.strftime("%I:%M:%S %p")
                             }
