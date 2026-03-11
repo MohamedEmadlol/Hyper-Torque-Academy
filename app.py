@@ -34,7 +34,10 @@ def save_log_to_csv(entry):
 def load_logs():
     file_path = 'hyper_torque_final_db.csv'
     if os.path.isfile(file_path):
-        return pd.read_csv(file_path).to_dict('records')
+        try:
+            return pd.read_csv(file_path).to_dict('records')
+        except:
+            return []
     return []
 
 # --- 3. قاعدة بيانات الطلاب والبيوت ---
@@ -61,7 +64,7 @@ def get_questions_by_lesson():
             {"q": "The continuity equation results from ____ conservation.", "options": ["Energy", "Mass", "Volume"], "a": "Mass"},
             {"q": "Pascal's Principle applies to?", "options": ["Solids", "Gases", "Confined Fluids"], "a": "Confined Fluids"},
             {"q": "Buoyant force direction?", "options": ["Down", "Up", "Side"], "a": "Up"},
-            {"q": "If Area decreases, Velocity?", "options": ["Increases", "Decreases", "Same"], "a": "Increases"},
+            {"q": "If Area decreases, Velocity?", "options": ["Up", "Down", "Same"], "a": "Up"},
             {"q": "Archimedes' principle measures ____ force?", "options": ["Gravity", "Buoyant", "Friction"], "a": "Buoyant"},
             {"q": "Viscosity measures?", "options": ["Flow resistance", "Density", "Pressure"], "a": "Flow resistance"},
             {"q": "100 cm2 to m2?", "options": ["0.1", "0.01", "1.0"], "a": "0.01"},
@@ -103,13 +106,13 @@ for houses in CLASS_HOUSES.values():
 
 for r in st.session_state.records:
     try:
-        h_name = r['House']
-        if r['Student'] == "ADMIN_ADJUST":
-            global_scores[h_name] += int(r['Score'])
+        h_name = r.get('House', '')
+        if r.get('Student') == "ADMIN_ADJUST":
+            global_scores[h_name] += int(r.get('Score', 0))
         else:
-            score_val = int(str(r['Score']).split('/')[0])
+            score_val = int(str(r.get('Score', '0')).split('/')[0])
             global_scores[h_name] += score_val
-            finished_ids.add(f"{r['Student']}_{r['Class']}")
+            finished_ids.add(f"{r.get('Student', '')}_{r.get('Class', '')}")
     except: pass
 st.session_state.global_scores = global_scores
 
@@ -120,12 +123,15 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("### 🟢 Recent Activity")
     if st.session_state.records:
-        student_only = [r for r in st.session_state.records if r['Student'] != "ADMIN_ADJUST"]
+        student_only = [r for r in st.session_state.records if r.get('Student') != "ADMIN_ADJUST"]
         for log in reversed(student_only[-5:]):
-            # ⚠️ ⚠️ ⚠️ هنا تم إضافة اليوم جنب التاريخ ⚠️ ⚠️ ⚠️
-            st.caption(f"📅 {log['Date']} ({log['Day']}) | {log['Time']}")
-            st.write(f"✅ **{log['Student']}** ({log['Class']}) - `{log['Score']}`")
+            # ⚠️ ⚠️ ⚠️ هنا تم إضافة اليوم جنب التاريخ مع معالجة الأخطاء ⚠️ ⚠️ ⚠️
+            day = log.get('Day', 'N/A')
+            st.caption(f"📅 {log.get('Date', 'N/A')} ({day}) | {log.get('Time', 'N/A')}")
+            st.write(f"✅ **{log.get('Student', 'Unknown')}** ({log.get('Class', 'N/A')}) - `{log.get('Score', 'N/A')}`")
             st.markdown("---")
+    else:
+        st.write("No activity yet.")
     
     if st.button("🏠 Global Dashboard"): st.session_state.page = "dashboard"; st.rerun()
     admin_input = st.text_input("Admin Access:", type="password")
@@ -194,7 +200,10 @@ else:
                         st.session_state.quiz_active = True
                         st.session_state.quiz_start_time = time.time()
                         st.session_state.selected_lesson = selected_lesson
-                        st.session_state.quiz_questions = random.sample(get_questions_by_lesson()[selected_lesson], 10)
+                        # ⚠️ ⚠️ ⚠️ تصحيح: نأخذ أقل عدد من الأسئلة المتاحة ⚠️ ⚠️ ⚠️
+                        questions = get_questions_by_lesson()[selected_lesson]
+                        num_questions = min(10, len(questions))
+                        st.session_state.quiz_questions = random.sample(questions, num_questions)
                         st.rerun()
                 else:
                     remaining = (15*60) - (time.time() - st.session_state.quiz_start_time)
@@ -218,7 +227,7 @@ else:
                                 "Student": st.session_state.user, 
                                 "Class": st.session_state.u_class, 
                                 "House": st.session_state.u_house, 
-                                "Score": f"{score}/10", 
+                                "Score": f"{score}/{len(st.session_state.quiz_questions)}", 
                                 "Lesson": st.session_state.selected_lesson,
                                 "Day": now_egy.strftime("%A"),  # ⚠️ إضافة اليوم
                                 "Date": now_egy.strftime("%Y-%m-%d"), 
@@ -226,6 +235,7 @@ else:
                             }
                             save_log_to_csv(log)
                             st.session_state.records.append(log)
+                            finished_ids.add(user_id)
                             st.session_state.quiz_active = False
                             st.session_state.page = "dashboard"
                             st.rerun()
