@@ -61,16 +61,16 @@ def get_questions_by_lesson():
         # 📚 Fluid Mechanics (دروس الفيزياء الحالية)
         # ============================================
         "Fluid Mechanics 🌊": [
-            {"q": "What is the SI unit of density?", "options": ["kg/m2", "kg/m3", "N/m2"], "a": "kg/m3"},
-            {"q": "The continuity equation results from ____ conservation.", "options": ["Energy", "Mass", "Volume"], "a": "Mass"},
-            {"q": "Pascal's Principle applies to?", "options": ["Solids", "Gases", "Confined Fluids"], "a": "Confined Fluids"},
-            {"q": "Buoyant force direction?", "options": ["Down", "Up", "Side"], "a": "Up"},
-            {"q": "If Area decreases, Velocity?", "options": ["Up", "Down", "Same"], "a": "Up"},
-            {"q": "Archimedes' principle measures ____ force?", "options": ["Gravity", "Buoyant", "Friction"], "a": "Buoyant"},
-            {"q": "Viscosity measures?", "options": ["Flow resistance", "Density", "Pressure"], "a": "Flow resistance"},
-            {"q": "100 cm2 to m2?", "options": ["0.1", "0.01", "1.0"], "a": "0.01"},
-            {"q": "Pressure = Force / ?", "options": ["Mass", "Volume", "Area"], "a": "Area"},
-            {"q": "Bernoulli's equation relates to?", "options": ["Energy", "Momentum", "Force"], "a": "Energy"},
+            {"01q": "What is the SI unit of density?", "options": ["kg/m2", "kg/m3", "N/m2"], "a": "kg/m3"},
+            {"02q": "The continuity equation results from ____ conservation.", "options": ["Energy", "Mass", "Volume"], "a": "Mass"},
+            {"03q": "Pascal's Principle applies to?", "options": ["Solids", "Gases", "Confined Fluids"], "a": "Confined Fluids"},
+            {"04q": "Buoyant force direction?", "options": ["Down", "Up", "Side"], "a": "Up"},
+            {"05q": "If Area decreases, Velocity?", "options": ["Up", "Down", "Same"], "a": "Up"},
+            {"06q": "Archimedes' principle measures ____ force?", "options": ["Gravity", "Buoyant", "Friction"], "a": "Buoyant"},
+            {"07q": "Viscosity measures?", "options": ["Flow resistance", "Density", "Pressure"], "a": "Flow resistance"},
+            {"08q": "100 cm2 to m2?", "options": ["0.1", "0.01", "1.0"], "a": "0.01"},
+            {"09q": "Pressure = Force / ?", "options": ["Mass", "Volume", "Area"], "a": "Area"},
+            {"10q": "Bernoulli's equation relates to?", "options": ["Energy", "Momentum", "Force"], "a": "Energy"},
         ],
         
         # ============================================
