@@ -5,7 +5,7 @@ import pandas as pd
 import os
 from datetime import datetime
 import pytz
-from twilio.rest import Client # ⚠️ تأكد من إضافة twilio في requirements.txt
+from twilio.rest import Client
 
 # --- 1. الإعدادات والبراندنج ---
 st.set_page_config(page_title="Hyper Torque Academy", page_icon="⚡", layout="wide")
@@ -27,14 +27,22 @@ egy_tz = pytz.timezone('Africa/Cairo')
 
 # --- 2. دالة إرسال الواتساب (Twilio) ---
 def send_whatsapp_notification(student_name, score, duration):
+    # بياناتك الحقيقية من الـ Dashboard
     account_sid = 'AC921274cce7ec0822ed9d60662083ecee'
-    auth_token = '................................' # ⚠️ ضع التوكن هنا
+    auth_token = '2708d2ac8f247f97b19ea508fd0df6a6' # ⚠️ ضع التوكن الحقيقي هنا بعد الضغط على Show
+    
     client = Client(account_sid, auth_token)
     
-    body = f"⚡ *Hyper Torque Academy*\n\n✅ الطالب: {student_name}\n🎯 السكور: {score}\n⏱️ الوقت: {duration} ثانية"
+    body = f"⚡ *Hyper Torque Academy*\n\n✅ الطالب: {student_name}\n🎯 السكور: {score}\n⏱️ الوقت المستغرق: {duration} ثانية\n\n_تم تسجيل النتيجة بنجاح!_ 🔥"
+    
     try:
-        client.messages.create(from_='whatsapp:+14155238886', body=body, to='whatsapp:+201206704044')
-    except: pass
+        client.messages.create(
+            from_='whatsapp:+14155238886', 
+            body=body, 
+            to='whatsapp:+201206704044'
+        )
+    except Exception as e:
+        print(f"WhatsApp Error: {e}")
 
 # --- 3. محرك حفظ البيانات ---
 def save_log_to_csv(entry):
@@ -48,7 +56,7 @@ def load_logs():
         except: return []
     return []
 
-# --- 4. قاعدة البيانات ---
+# --- 4. قاعدة بيانات الطلاب ---
 STUDENT_DB = {
     "12-A": ["Mohamed Emad", "Ahmed Ali", "Sara Hassan"],
     "12-B": ["Eren Yeager", "Mikasa Ackerman", "Armin Arlert"],
@@ -60,7 +68,7 @@ CLASS_HOUSES = {
     "12-C": ["Survey Corps 🕊️", "Wall Rose 🏰", "Wall Maria 🧱"]
 }
 
-# --- 5. مخزن الأسئلة (25 سؤال موسع) ---
+# --- 5. مخزن الأسئلة (25 سؤال موسع من الصور) ---
 def get_questions_by_lesson():
     return {
         "Fluid Mechanics 🌊": [
@@ -68,19 +76,19 @@ def get_questions_by_lesson():
             {"q": "If the radius of the large piston is 4 times the small piston radius, the force multiplication is:", "options": ["4 times", "8 times", "16 times", "2 times"], "a": "16 times"},
             {"q": "A crown weighs 7.84 N in air and 6.86 N in water. Its density is:", "options": ["19.3 x 10³ kg/m³", "8.0 x 10³ kg/m³", "10.0 x 10³ kg/m³", "2.7 x 10³ kg/m³"], "a": "8.0 x 10³ kg/m³"},
             {"q": "Water flows through a pipe at 2 m/s. If the pipe narrows to 1/4 of its area, the new velocity is:", "options": ["0.5 m/s", "4 m/s", "16 m/s", "8 m/s"], "a": "8 m/s"},
-            {"q": "Iron and aluminum balls of the same VOLUME submerged in water experience:", "options": ["Iron ball", "Aluminum ball", "Both the same", "Depends on mass"], "a": "Both the same"},
-            {"q": "If pipe diameter is doubled, the area increases by:", "options": ["2 times", "8 times", "16 times", "4 times"], "a": "4 times"},
+            {"q": "An iron ball and an aluminum ball of the same VOLUME are submerged in water. Which experiences a greater buoyant force?", "options": ["Iron ball", "Aluminum ball", "Both the same", "Depends on mass"], "a": "Both the same"},
             {"q": "Calculate absolute pressure at 10m depth (P_atm=1.01x10⁵ Pa, ρ=1000, g=9.8):", "options": ["1.01 x 10⁵ Pa", "1.99 x 10⁵ Pa", "0.98 x 10⁵ Pa", "2.50 x 10⁵ Pa"], "a": "1.99 x 10⁵ Pa"},
-            {"q": "Continuity equation (A1v1 = A2v2) is based on conservation of:", "options": ["Energy", "Momentum", "Mass", "Pressure"], "a": "Mass"},
+            {"q": "If pipe diameter is doubled, the area increases by:", "options": ["2 times", "8 times", "16 times", "4 times"], "a": "4 times"},
+            {"q": "The continuity equation (A1v1 = A2v2) is a statement of conservation of:", "options": ["Energy", "Momentum", "Mass", "Pressure"], "a": "Mass"},
             {"q": "A boat moves from fresh water to salt water. The buoyant force:", "options": ["Increases", "Decreases", "Stays the same", "Disappears"], "a": "Stays the same"},
-            {"q": "Gauge pressure is defined as:", "options": ["P_total + P_atm", "P_atm - P_total", "P_total - P_atm", "P_total / P_atm"], "a": "P_total - P_atm"},
+            {"q": "Gauge pressure formula is:", "options": ["P_total + P_atm", "P_atm - P_total", "P_total - P_atm", "P_total / P_atm"], "a": "P_total - P_atm"},
             {"q": "What is the SI unit of mass density?", "options": ["kg/m³", "kg/m²", "Newton/m³", "Pascal"], "a": "kg/m³"},
             {"q": "Pascal's principle states pressure in a closed container is transmitted equally to:", "options": ["The bottom only", "The walls only", "Every point in the fluid", "The pistons only"], "a": "Every point in the fluid"},
             {"q": "If an object is floating, the buoyant force (Fb) is:", "options": ["Equal to weight", "Greater than weight", "Less than weight", "Zero"], "a": "Equal to weight"},
             {"q": "Fluid flows through a pipe that narrows to half its original DIAMETER. The speed will:", "options": ["Increase by 2 times", "Increase by 4 times", "Decrease by 4 times", "Decrease by 2 times"], "a": "Increase by 4 times"},
-            {"q": "Which of these are considered fluids?", "options": ["Liquid and Gas", "Solid and Liquid", "Solid only", "Gas only"], "a": "Liquid and Gas"},
-            {"q": "In a hydraulic system, if you triple the area of the output piston, the force will:", "options": ["Triple", "Divide by 3", "Increase 9x", "Same"], "a": "Triple"},
             {"q": "As an object sinks deeper (fully submerged), the buoyant force:", "options": ["Increases", "Remains constant", "Decreases", "Becomes zero"], "a": "Remains constant"},
+            {"q": "In a hydraulic system, tripling the area of the output piston will:", "options": ["Triple the force", "Divide force by 3", "Increase force 9x", "Not change force"], "a": "Triple the force"},
+            {"q": "The SI unit of density is:", "options": ["kg/m2", "kg/m3", "N/m2", "Pascal"], "a": "kg/m3"},
             {"q": "Viscosity measures:", "options": ["Flow resistance", "Density", "Pressure", "Mass"], "a": "Flow resistance"},
             {"q": "100 cm2 to m2 conversion factor is:", "options": ["0.1", "0.01", "1.0", "10"], "a": "0.01"},
             {"q": "Pressure is calculated as:", "options": ["Mass / Volume", "Force / Area", "Force * Area", "Mass * Gravity"], "a": "Force / Area"},
@@ -88,7 +96,7 @@ def get_questions_by_lesson():
             {"q": "A 10 kg mass has a density of 2000 kg/m³. Its volume is:", "options": ["0.005 m³", "20,000 m³", "0.05 m³", "2 m³"], "a": "0.005 m³"},
             {"q": "Bernoulli's equation relates to conservation of:", "options": ["Mass", "Momentum", "Energy", "Force"], "a": "Energy"},
             {"q": "If a gas is compressed to half its volume (constant T), its density:", "options": ["Doubles", "Halves", "Stays same", "Triples"], "a": "Doubles"},
-            {"q": "The continuity equation results from ____ conservation.", "options": ["Energy", "Mass", "Volume", "Force"], "a": "Mass"}
+            {"q": "Which of these are considered fluids?", "options": ["Liquid and Gas", "Solid and Liquid", "Solid only", "Gas only"], "a": "Liquid and Gas"}
         ],
         "Electricity ⚡": [
             {"q": "The SI unit of electric current is:", "options": ["Volt", "Ampere", "Ohm", "Watt"], "a": "Ampere"},
@@ -166,10 +174,10 @@ elif st.session_state.page == "dashboard":
         for i, student in enumerate(fame_list[:3]):
             with cols[i]:
                 st.markdown(f"<div class='fame-card'><h1>{medals[i]}</h1><h3>{student['Name']}</h3><p class='correct'>{student['Score']}</p><p>⏱️ {student['Time']}s</p></div>", unsafe_allow_html=True)
-    else: st.info("The Hall of Fame is waiting...")
+    else: st.info("The Hall of Fame is waiting for its first hero...")
 
     st.markdown("---")
-    st.header("🏠 House Standings")
+    st.header("🏠 House Leaderboard")
     sorted_houses = sorted(st.session_state.global_scores.items(), key=lambda x: x[1], reverse=True)
     cols_h = st.columns(3)
     for i, (h, s) in enumerate(sorted_houses):
@@ -198,7 +206,7 @@ else:
                 if 'quiz_active' not in st.session_state: st.session_state.quiz_active = False
                 if not st.session_state.quiz_active:
                     sel_lesson = st.selectbox("Lesson:", list(get_questions_by_lesson().keys()))
-                    if st.text_input("Key:", type="password") == "Hyper2026" and st.button("Start"):
+                    if st.text_input("Key:", type="password") == "Hyper2026" and st.button("Start Mission"):
                         st.session_state.quiz_active = True
                         st.session_state.quiz_start_time = time.time()
                         st.session_state.quiz_questions = random.sample(get_questions_by_lesson()[sel_lesson], 10)
@@ -209,8 +217,8 @@ else:
                     st.markdown(f"<div class='timer-box'><h3>⏳ {int(rem//60)}:{int(rem%60):02d}</h3></div>", unsafe_allow_html=True)
                     with st.form("quiz"):
                         ans = {i: st.radio(f"Q{i+1}: {q['q']}", q['options'], index=None) for i, q in enumerate(st.session_state.quiz_questions)}
-                        if st.form_submit_button("Submit"):
-                            if None in ans.values(): st.warning("Answer all questions!")
+                        if st.form_submit_button("Submit Deployment"):
+                            if None in ans.values(): st.warning("⚠️ Answer all questions!")
                             else:
                                 score = sum(1 for i, q in enumerate(st.session_state.quiz_questions) if ans[i] == q['a'])
                                 duration = int(time.time() - st.session_state.quiz_start_time)
@@ -220,19 +228,19 @@ else:
                                 send_whatsapp_notification(st.session_state.user, f"{score}/10", duration)
                                 st.session_state.quiz_active = False; st.session_state.page = "dashboard"; st.rerun()
         else:
-            st.info("🎯 Practice Mode")
+            st.info("🎯 Practice Mode - Full Bank")
             sel_lesson = st.selectbox("Lesson:", list(get_questions_by_lesson().keys()))
             all_qs = get_questions_by_lesson()[sel_lesson]
             with st.form("as_form"):
                 u_ans = {i: st.radio(f"Q{i+1}: {q['q']}", q['options'], index=None) for i, q in enumerate(all_qs)}
-                if st.form_submit_button("Check"):
-                    if None in u_ans.values(): st.error("Fill all!")
+                if st.form_submit_button("Check Results"):
+                    if None in u_ans.values(): st.error("❌ Fill all questions!")
                     else:
                         score = 0
                         for i, q in enumerate(all_qs):
                             is_corr = u_ans[i] == q['a']
                             if is_corr: score += 1
                             st.markdown(f"<p class='{'correct' if is_corr else 'wrong'}'>{'✅' if is_corr else '❌'} Q{i+1}: {q['a']}</p>", unsafe_allow_html=True)
-                        st.write(f"Score: {score}/{len(all_qs)}")
+                        st.write(f"### Score: {score}/{len(all_qs)}")
 
         if st.button("Logout"): del st.session_state.user; st.rerun()
