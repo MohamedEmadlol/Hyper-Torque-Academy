@@ -9,6 +9,7 @@ import pytz
 # --- 1. الإعدادات والبراندنج مع JavaScript للتحديث المباشر ---
 st.set_page_config(page_title="Hyper Torque Academy", page_icon="⚡", layout="wide")
 
+# JavaScript لتحديث الساعة والتايمر مباشرة في المتصفح دون الحاجة لريفريش السيرفر
 st.markdown("""
     <style>
     .main { background-color: #0e1117; color: #ffffff; }
@@ -18,9 +19,7 @@ st.markdown("""
     .timer-box { background-color: #1e2130; padding: 10px; border-radius: 10px; border: 2px solid #ff4b4b; text-align: center; margin-bottom: 20px; }
     </style>
     
-    <!-- JavaScript لتحديث الساعة مباشرة في المتصفح -->
     <script>
-    // دالة لتحديث الساعة في الـ sidebar
     function updateClock() {
         const options = { 
             timeZone: 'Africa/Cairo',
@@ -29,20 +28,17 @@ st.markdown("""
             second: '2-digit',
             hour12: true 
         };
-        
         const now = new Date();
         const timeString = now.toLocaleTimeString('en-US', options);
         
         // البحث عن عنصر الساعة وتحديثه
-        const clockElements = document.querySelectorAll('[data-testid="stSidebar"] p');
+        const clockElements = window.parent.document.querySelectorAll('p, span, div');
         clockElements.forEach(el => {
             if (el.textContent.includes('🕒 Clock:')) {
                 el.innerHTML = `🕒 Clock: <strong>${timeString}</strong>`;
             }
         });
     }
-    
-    // تحديث الساعة كل ثانية
     setInterval(updateClock, 1000);
     </script>
     """, unsafe_allow_html=True)
@@ -62,10 +58,8 @@ def save_log_to_csv(entry):
 def load_logs():
     file_path = 'hyper_torque_final_db.csv'
     if os.path.isfile(file_path):
-        try:
-            return pd.read_csv(file_path).to_dict('records')
-        except:
-            return []
+        try: return pd.read_csv(file_path).to_dict('records')
+        except: return []
     return []
 
 # --- 3. قاعدة بيانات الطلاب والبيوت ---
@@ -81,12 +75,9 @@ CLASS_HOUSES = {
     "12-C": ["Survey Corps 🕊️", "Wall Rose 🏰", "Wall Maria 🧱"]
 }
 
-# --- 4. مخزن الأسئلة (مقسم حسب الدروس) ---
+# --- 4. مخزن الأسئلة ---
 def get_questions_by_lesson():
     return {
-        # ============================================
-        # 📚 Fluid Mechanics (دروس الفيزياء الحالية)
-        # ============================================
         "Fluid Mechanics 🌊": [
             {"q": "What is the SI unit of density?", "options": ["kg/m2", "kg/m3", "N/m2"], "a": "kg/m3"},
             {"q": "The continuity equation results from ____ conservation.", "options": ["Energy", "Mass", "Volume"], "a": "Mass"},
@@ -99,29 +90,13 @@ def get_questions_by_lesson():
             {"q": "Pressure = Force / ?", "options": ["Mass", "Volume", "Area"], "a": "Area"},
             {"q": "Bernoulli's equation relates to?", "options": ["Energy", "Momentum", "Force"], "a": "Energy"},
         ],
-        
-        # ============================================
-        # ⚡ Electricity (دروس الكهرباء الجديدة)
-        # ============================================
         "Electricity ⚡": [
             {"q": "What is the SI unit of electric current?", "options": ["Volt", "Ampere", "Ohm"], "a": "Ampere"},
-            {"q": "Ohm's law states V = ?", "options": ["IR", "I/R", "R/I"], "a": "IR"},
-            {"q": "Resistance depends on?", "options": ["Length", "Area", "Both"], "a": "Both"},
-            {"q": "If length doubles, resistance?", "options": ["Doubles", "Halves", "Same"], "a": "Doubles"},
-            {"q": "If area doubles, resistance?", "options": ["Doubles", "Halves", "Same"], "a": "Halves"},
-            {"q": "Current flows from ____ to ____.", "options": ["Positive to Negative", "Negative to Positive", "Same potential"], "a": "Positive to Negative"},
-            {"q": "Power in electric circuit is?", "options": ["VI", "V/I", "I/V"], "a": "VI"},
-            {"q": "1 Ampere = ____ Coulombs per second.", "options": ["1", "10", "100"], "a": "1"},
-            {"q": "Series resistors add ____.", "options": ["Directly", "Inversely", "Square"], "a": "Directly"},
-            {"q": "Parallel resistors add ____.", "options": ["Directly", "Inversely", "Square"], "a": "Inversely"},
-        ],
-        
-        # ============================================
-        # 📌 ⚠️ ⚠️ ⚠️ أضف دروس جديدة هنا ⚠️ ⚠️ ⚠️
-        # ============================================
+            {"q": "Ohm's law states V = ?", "options": ["IR", "I/R", "R/I"], "a": "IR"}
+        ]
     }
 
-# --- 5. تهيئة البيانات ---
+# --- 5. تهيئة البيانات وحساب النقاط ---
 if 'records' not in st.session_state:
     st.session_state.records = load_logs()
 
@@ -142,7 +117,7 @@ for r in st.session_state.records:
     except: pass
 st.session_state.global_scores = global_scores
 
-# --- 6. Sidebar (النشاط الأخير + ساعة القاهرة) ---
+# --- 6. Sidebar ---
 with st.sidebar:
     st.markdown("## ⚡ HYPER TORQUE ACADEMY")
     st.markdown(f"**🕒 Clock:** `{datetime.now(egy_tz).strftime('%I:%M:%S %p')}`")
@@ -151,12 +126,9 @@ with st.sidebar:
     if st.session_state.records:
         student_only = [r for r in st.session_state.records if r.get('Student') != "ADMIN_ADJUST"]
         for log in reversed(student_only[-5:]):
-            day = log.get('Day', 'N/A')
-            st.caption(f"📅 {log.get('Date', 'N/A')} ({day}) | {log.get('Time', 'N/A')}")
-            st.write(f"✅ **{log.get('Student', 'Unknown')}** ({log.get('Class', 'N/A')}) - `{log.get('Score', 'N/A')}`")
+            st.caption(f"📅 {log.get('Date', 'N/A')} | {log.get('Time', 'N/A')}")
+            st.write(f"✅ **{log.get('Student', 'Unknown')}** - `{log.get('Score', 'N/A')}`")
             st.markdown("---")
-    else:
-        st.write("No activity yet.")
     
     if st.button("🏠 Global Dashboard"): st.session_state.page = "dashboard"; st.rerun()
     admin_input = st.text_input("Admin Access:", type="password")
@@ -174,15 +146,7 @@ if is_admin:
         adj = st.number_input("Adjust:", value=0)
         if st.button("Apply"):
             now_egy = datetime.now(egy_tz)
-            entry = {
-                "Student": "ADMIN_ADJUST", 
-                "Class": "SYSTEM", 
-                "House": h_sel, 
-                "Score": adj, 
-                "Day": now_egy.strftime("%A"),
-                "Date": now_egy.strftime("%Y-%m-%d"), 
-                "Time": now_egy.strftime("%I:%M:%S %p")
-            }
+            entry = {"Student": "ADMIN_ADJUST", "Class": "SYSTEM", "House": h_sel, "Score": adj, "Day": now_egy.strftime("%A"), "Date": now_egy.strftime("%Y-%m-%d"), "Time": now_egy.strftime("%I:%M:%S %p")}
             save_log_to_csv(entry); st.session_state.records.append(entry); st.rerun()
 
 elif st.session_state.page == "dashboard":
@@ -214,104 +178,59 @@ else:
                 st.error("🛑 Quiz already submitted!")
             else:
                 if 'quiz_active' not in st.session_state: st.session_state.quiz_active = False
-                
                 if not st.session_state.quiz_active:
                     lessons = list(get_questions_by_lesson().keys())
                     selected_lesson = st.selectbox("Select Lesson:", lessons)
-                    
                     pwd = st.text_input("Quiz Key:", type="password")
                     if st.button("Start Mission") and pwd == "Hyper2026":
                         st.session_state.quiz_active = True
-                        st.session_state.quiz_start_time = time.time()
-                        st.session_state.quiz_end_time = time.time() + (15 * 60)  # 15 دقيقة
+                        st.session_state.quiz_end_time = time.time() + (15 * 60)
                         st.session_state.selected_lesson = selected_lesson
-                        questions = get_questions_by_lesson()[selected_lesson]
-                        num_questions = min(10, len(questions))
-                        st.session_state.quiz_questions = random.sample(questions, num_questions)
+                        qs = get_questions_by_lesson()[selected_lesson]
+                        st.session_state.quiz_questions = random.sample(qs, min(10, len(qs)))
                         st.rerun()
                 else:
-                    # حساب الوقت المتبقي من جانب السيرفر (للتحقق)
                     remaining = st.session_state.quiz_end_time - time.time()
+                    if remaining <= 0:
+                        st.session_state.quiz_active = False; st.rerun()
                     
-                    if remaining <= 0: 
-                        st.session_state.quiz_active = False
-                        st.rerun()
-                    
-                    # تايمر بتحديث مباشر باستخدام JavaScript
+                    # الـ HTML والـ JS الخاص بالتايمر الحي
                     timer_html = f"""
                     <div class='timer-box'>
                         <h3 id="live-timer">⏳ Time: {int(remaining//60)}:{int(remaining%60):02d}</h3>
                     </div>
-                    
                     <script>
                     (function() {{
                         const endTime = {st.session_state.quiz_end_time};
-                        
                         function updateTimer() {{
                             const now = Date.now() / 1000;
                             const remaining = Math.max(0, endTime - now);
-                            
                             if (remaining <= 0) {{
                                 document.getElementById('live-timer').innerHTML = '⏳ Time: 0:00';
-                                setTimeout(() => window.location.reload(), 1000);
                                 return;
                             }}
-                            
                             const minutes = Math.floor(remaining / 60);
                             const seconds = Math.floor(remaining % 60);
-                            document.getElementById('live-timer').innerHTML = 
-                                `⏳ Time: ${{minutes}}:${{seconds < 10 ? '0' : ''}}${{seconds}}`;
+                            document.getElementById('live-timer').innerHTML = `⏳ Time: ${{minutes}}:${{seconds < 10 ? '0' : ''}}${{seconds}}`;
                         }}
-                        
-                        updateTimer();
                         setInterval(updateTimer, 1000);
                     }})();
                     </script>
                     """
-                    
                     st.markdown(timer_html, unsafe_allow_html=True)
-                    st.markdown(f"**📚 Lesson:** {st.session_state.selected_lesson}")
                     
-                    with st.form("quiz_form"):
-                        answers = {}
-                        for i, q in enumerate(st.session_state.quiz_questions):
-                            st.write(f"**Q{i+1}: {q['q']}**")
-                            answers[i] = st.radio("Choose:", q['options'], key=f"q{i}", label_visibility="collapsed")
-                        
+                    with st.form("quiz"):
+                        ans = {i: st.radio(f"Q{i+1}: {q['q']}", q['options']) for i, q in enumerate(st.session_state.quiz_questions)}
                         if st.form_submit_button("Submit Deployment"):
-                            # التحقق من أن الوقت لم ينتهي
-                            if time.time() > st.session_state.quiz_end_time:
-                                st.error("⏰ Time's up! Quiz automatically submitted.")
-                                score = 0
-                            else:
-                                score = sum(1 for i, q in enumerate(st.session_state.quiz_questions) if answers[i] == q['a'])
-                            
+                            score = sum(1 for i, q in enumerate(st.session_state.quiz_questions) if ans[i] == q['a'])
                             now_egy = datetime.now(egy_tz)
-                            log = {
-                                "Student": st.session_state.user, 
-                                "Class": st.session_state.u_class, 
-                                "House": st.session_state.u_house, 
-                                "Score": f"{score}/{len(st.session_state.quiz_questions)}", 
-                                "Lesson": st.session_state.selected_lesson,
-                                "Day": now_egy.strftime("%A"),
-                                "Date": now_egy.strftime("%Y-%m-%d"), 
-                                "Time": now_egy.strftime("%I:%M:%S %p")
-                            }
-                            save_log_to_csv(log)
-                            st.session_state.records.append(log)
-                            finished_ids.add(user_id)
-                            st.session_state.quiz_active = False
-                            st.session_state.page = "dashboard"
-                            st.rerun()
+                            log = {"Student": st.session_state.user, "Class": st.session_state.u_class, "House": st.session_state.u_house, "Score": f"{score}/{len(st.session_state.quiz_questions)}", "Date": now_egy.strftime("%Y-%m-%d"), "Time": now_egy.strftime("%I:%M:%S %p")}
+                            save_log_to_csv(log); st.session_state.records.append(log)
+                            st.session_state.quiz_active = False; st.session_state.page = "dashboard"; st.rerun()
         else:
-            st.info("Practice Mode - No scores recorded.")
-            lessons = list(get_questions_by_lesson().keys())
-            selected_lesson = st.selectbox("Select Lesson for Practice:", lessons)
-            for q in get_questions_by_lesson()[selected_lesson]:
+            st.info("Practice Mode.")
+            for q in get_questions_by_lesson()["Fluid Mechanics 🌊"]:
                 st.write(f"**{q['q']}**")
                 st.radio("Practice:", q['options'], key="as_"+q['q'])
         
-        if st.button("Logout"):
-            st.session_state.quiz_active = False
-            del st.session_state.user
-            st.rerun()
+        if st.button("Logout"): del st.session_state.user; st.rerun()
