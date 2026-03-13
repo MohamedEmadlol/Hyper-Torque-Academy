@@ -55,29 +55,27 @@ CLASS_HOUSES = {
 # --- 4. مخزن الأسئلة الشامل (Master Bank) ---
 def get_questions_by_lesson():
     return {
-        "Fluid Mechanics 🌊": [
-            # مسائل حسابية (Calculations) من الصور
+        "Fluid Mechanics (Mastery) 🌊": [
+            # مسائل حسابية وتريكات من الصور
             {"q": "A hydraulic lift has a small piston area (A1) of 0.20 m² and a large piston area (A2) of 0.90 m². If a force (F2) of 1.20 x 10⁴ N is supported, calculate F1.", "options": ["2.7 x 10³ N", "5.4 x 10³ N", "1.5 x 10³ N", "2.7 x 10² N"], "a": "2.7 x 10³ N"},
             {"q": "If the radius of the large piston in a hydraulic press is 4 times the radius of the small piston, what is the force multiplication factor?", "options": ["16 times", "4 times", "8 times", "2 times"], "a": "16 times"},
             {"q": "A crown weighs 7.84 N in air and 6.86 N in water. Calculate the density of the crown (ρ_water = 1000 kg/m³).", "options": ["8.0 x 10³ kg/m³", "19.3 x 10³ kg/m³", "10.0 x 10³ kg/m³", "7.8 x 10³ kg/m³"], "a": "8.0 x 10³ kg/m³"},
             {"q": "Water flows through a pipe at 2 m/s. If the pipe narrows to 1/4 of its original area, what is the new velocity?", "options": ["8 m/s", "4 m/s", "0.5 m/s", "16 m/s"], "a": "8 m/s"},
-            {"q": "Calculate the absolute pressure at a depth of 10m in water. (P_atm = 1.01 x 10⁵ Pa, ρ=1000, g=9.8)", "options": ["1.99 x 10⁵ Pa", "0.98 x 10⁵ Pa", "1.01 x 10⁵ Pa", "2.50 x 10⁵ Pa"], "a": "1.99 x 10⁵ Pa"},
-            {"q": "A block of wood (ρ = 700 kg/m³) floats in water. What percentage of the block is submerged?", "options": ["70%", "30%", "100%", "50%"], "a": "70%"},
-            {"q": "If a fluid's speed increases from 2 m/s to 6 m/s in a horizontal pipe, the pressure in the fast-moving region will:", "options": ["Decrease", "Increase", "Remain same", "Double"], "a": "Decrease"},
-            # أسئلة التريكات (Tricky)
             {"q": "An iron ball and an aluminum ball of the same VOLUME are submerged in water. Which experiences a greater buoyant force?", "options": ["Both the same", "Iron ball", "Aluminum ball", "Depends on mass"], "a": "Both the same"},
             {"q": "If the diameter of a pipe is doubled, the cross-sectional area increases by:", "options": ["4 times", "2 times", "8 times", "16 times"], "a": "4 times"},
-            {"q": "According to Pascal's Principle, pressure applied to a fluid in a closed container is transmitted equally to:", "options": ["Every point in the fluid", "The bottom only", "The walls only", "The pistons only"], "a": "Every point in the fluid"},
+            {"q": "Calculate the absolute pressure at a depth of 10m in water. (P_atm = 1.01 x 10⁵ Pa, ρ=1000, g=9.8)", "options": ["1.99 x 10⁵ Pa", "0.98 x 10⁵ Pa", "1.01 x 10⁵ Pa", "2.50 x 10⁵ Pa"], "a": "1.99 x 10⁵ Pa"},
             {"q": "A boat moves from fresh water (ρ=1000) to salt water (ρ=1025). The buoyant force on the boat will:", "options": ["Stay the same (it still floats)", "Increase", "Decrease", "Become zero"], "a": "Stay the same (it still floats)"},
             {"q": "The continuity equation (A1v1 = A2v2) is a statement of the conservation of:", "options": ["Mass", "Energy", "Momentum", "Pressure"], "a": "Mass"},
-            {"q": "As an object sinks deeper into a fluid (fully submerged), the buoyant force on it:", "options": ["Remains constant", "Increases", "Decreases", "Becomes zero"], "a": "Remains constant"},
             {"q": "Gauge pressure is defined as:", "options": ["P_total - P_atm", "P_total + P_atm", "P_atm - P_total", "P_total / P_atm"], "a": "P_total - P_atm"},
-            {"q": "Which of these is NOT a fluid?", "options": ["Steel sphere", "Water vapor", "Olive oil", "Atmospheric air"], "a": "Steel sphere"}
+            {"q": "What is the SI unit of mass density?", "options": ["kg/m³", "kg/m²", "Newton/m³", "Pascal"], "a": "kg/m³"},
+            {"q": "Pascal's principle states that pressure applied to a fluid in a closed container is:", "options": ["Transmitted equally to every point", "Decreases with distance", "Increases at the bottom only", "Depends on gravity"], "a": "Transmitted equally to every point"},
+            {"q": "If an object is floating, the buoyant force (Fb) is:", "options": ["Equal to object's weight", "Greater than object's weight", "Less than object's weight", "Zero"], "a": "Equal to object's weight"},
+            {"q": "Fluid flows through a pipe that narrows to half its original DIAMETER. The speed will:", "options": ["Increase by 4 times", "Increase by 2 times", "Decrease by 4 times", "Decrease by 2 times"], "a": "Increase by 4 times"},
+            {"q": "Which of these are considered fluids?", "options": ["Liquid and Gas", "Solid and Liquid", "Solid only", "Gas only"], "a": "Liquid and Gas"}
         ],
         "Electricity ⚡": [
             {"q": "What is the SI unit of electric current?", "options": ["Volt", "Ampere", "Ohm"], "a": "Ampere"},
             {"q": "Ohm's law states V = ?", "options": ["IR", "I/R", "R/I"], "a": "IR"},
-            {"q": "Resistance depends on?", "options": ["Length", "Area", "Both"], "a": "Both"},
         ]
     }
 
@@ -159,7 +157,6 @@ else:
                     if st.text_input("Quiz Key:", type="password") == "Hyper2026" and st.button("Start Mission"):
                         st.session_state.quiz_active = True
                         st.session_state.quiz_start_time = time.time()
-                        # اختيار 10 عشوائي فقط للكويز
                         st.session_state.quiz_questions = random.sample(get_questions_by_lesson()[selected_lesson], 10)
                         st.rerun()
                 else:
@@ -167,45 +164,51 @@ else:
                     if rem <= 0: st.session_state.quiz_active = False; st.rerun()
                     st.markdown(f"<div class='timer-box'><h3>⏳ Time: {int(rem//60)}:{int(rem%60):02d}</h3></div>", unsafe_allow_html=True)
                     with st.form("quiz"):
-                        ans = {i: st.radio(f"Q{i+1}: {q['q']}", q['options']) for i, q in enumerate(st.session_state.quiz_questions)}
-                        if st.form_submit_button("Submit"):
-                            score = sum(1 for i, q in enumerate(st.session_state.quiz_questions) if ans[i] == q['a'])
-                            save_log_to_csv({"Student": st.session_state.user, "Class": st.session_state.u_class, "House": st.session_state.u_house, "Score": f"{score}/10", "Date": datetime.now(egy_tz).strftime("%Y-%m-%d"), "Time": datetime.now(egy_tz).strftime("%I:%M:%S %p")})
-                            st.session_state.quiz_active = False; st.session_state.page = "dashboard"; st.rerun()
+                        ans = {}
+                        for i, q in enumerate(st.session_state.quiz_questions):
+                            st.write(f"**Q{i+1}: {q['q']}**")
+                            # index=None يجعلها فارغة
+                            ans[i] = st.radio(f"Ans {i}", q['options'], key=f"q_{i}", index=None, label_visibility="collapsed")
+                        
+                        if st.form_submit_button("Submit Deployment"):
+                            if None in ans.values():
+                                st.warning("⚠️ جاوب على كل الأسئلة الأول يا بطل!")
+                            else:
+                                score = sum(1 for i, q in enumerate(st.session_state.quiz_questions) if ans[i] == q['a'])
+                                save_log_to_csv({"Student": st.session_state.user, "Class": st.session_state.u_class, "House": st.session_state.u_house, "Score": f"{score}/10", "Date": datetime.now(egy_tz).strftime("%Y-%m-%d"), "Time": datetime.now(egy_tz).strftime("%I:%M:%S %p")})
+                                st.session_state.quiz_active = False; st.session_state.page = "dashboard"; st.rerun()
         
         else: # Assignment Mode 📚
-            st.info("🎯 Practice Mode - Answer all questions in the bank!")
+            st.info("🎯 Practice Mode - All questions available!")
             lessons = list(get_questions_by_lesson().keys())
-            selected_lesson = st.selectbox("Select Lesson to Practice:", lessons)
-            
-            # في الأسايمنت بنجيب كل الأسئلة مش عينة عشوائية
-            all_practice_questions = get_questions_by_lesson()[selected_lesson]
+            selected_lesson = st.selectbox("Select Lesson:", lessons)
+            all_qs = get_questions_by_lesson()[selected_lesson]
 
             with st.form("assignment_form"):
-                user_answers = {}
-                for i, q in enumerate(all_practice_questions):
+                user_ans = {}
+                for i, q in enumerate(all_qs):
                     st.write(f"**Q{i+1}: {q['q']}**")
-                    user_answers[i] = st.radio(f"Select Q{i}", q['options'], key=f"as_q_{i}", label_visibility="collapsed")
-                
+                    user_ans[i] = st.radio(f"As {i}", q['options'], key=f"as_{i}", index=None, label_visibility="collapsed")
                 check = st.form_submit_button("✅ Check Results")
             
             if check:
-                st.markdown("---")
-                score = 0
-                for i, q in enumerate(all_practice_questions):
-                    is_correct = user_answers[i] == q['a']
-                    if is_correct: score += 1
-                    
-                    color = "correct" if is_correct else "wrong"
-                    icon = "✅" if is_correct else "❌"
-                    st.markdown(f"""
-                        <div style='padding: 10px; border-left: 5px solid {"#00ff88" if is_correct else "#ff4b4b"}; margin-bottom: 10px; background: #1e2130;'>
-                            {icon} <b>Q{i+1}:</b> {q['q']}<br>
-                            Your answer: <span class='{color}'>{user_answers[i]}</span><br>
-                            Correct answer: <span class='correct'>{q['a']}</span>
-                        </div>
-                    """, unsafe_allow_html=True)
-                
-                st.markdown(f"<div class='result-box'><h2>Total Score: {score}/{len(all_practice_questions)}</h2></div>", unsafe_allow_html=True)
+                if None in user_ans.values():
+                    st.error("❌ لازم تختار إجابة لكل سؤال عشان نصحح!")
+                else:
+                    st.markdown("---")
+                    score = 0
+                    for i, q in enumerate(all_qs):
+                        is_correct = user_ans[i] == q['a']
+                        if is_correct: score += 1
+                        color = "correct" if is_correct else "wrong"
+                        icon = "✅" if is_correct else "❌"
+                        st.markdown(f"""
+                            <div style='padding: 10px; border-left: 5px solid {"#00ff88" if is_correct else "#ff4b4b"}; margin-bottom: 10px; background: #1e2130;'>
+                                {icon} <b>Q{i+1}:</b> {q['q']}<br>
+                                Your answer: <span class='{color}'>{user_ans[i]}</span><br>
+                                Correct answer: <span class='correct'>{q['a']}</span>
+                            </div>
+                        """, unsafe_allow_html=True)
+                    st.markdown(f"<div class='result-box'><h2>Total Score: {score}/{len(all_qs)}</h2></div>", unsafe_allow_html=True)
 
         if st.button("Logout"): del st.session_state.user; st.rerun()
