@@ -1,3 +1,2 @@
 pandas
 pytz
-streamlit-autorefresh
