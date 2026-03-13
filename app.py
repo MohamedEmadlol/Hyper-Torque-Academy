@@ -52,20 +52,27 @@ CLASS_HOUSES = {
     "12-C": ["Survey Corps 🕊️", "Wall Rose 🏰", "Wall Maria 🧱"]
 }
 
-# --- 4. مخزن الأسئلة ---
+# --- 4. مخزن الأسئلة الشامل (Master Bank) ---
 def get_questions_by_lesson():
     return {
         "Fluid Mechanics 🌊": [
-            {"q": "What is the SI unit of density?", "options": ["kg/m2", "kg/m3", "N/m2"], "a": "kg/m3"},
-            {"q": "The continuity equation results from ____ conservation.", "options": ["Energy", "Mass", "Volume"], "a": "Mass"},
-            {"q": "Pascal's Principle applies to?", "options": ["Solids", "Gases", "Confined Fluids"], "a": "Confined Fluids"},
-            {"q": "Buoyant force direction?", "options": ["Down", "Up", "Side"], "a": "Up"},
-            {"q": "If Area decreases, Velocity?", "options": ["Up", "Down", "Same"], "a": "Up"},
-            {"q": "Archimedes' principle measures ____ force?", "options": ["Gravity", "Buoyant", "Friction"], "a": "Buoyant"},
-            {"q": "Viscosity measures?", "options": ["Flow resistance", "Density", "Pressure"], "a": "Flow resistance"},
-            {"q": "100 cm2 to m2?", "options": ["0.1", "0.01", "1.0"], "a": "0.01"},
-            {"q": "Pressure = Force / ?", "options": ["Mass", "Volume", "Area"], "a": "Area"},
-            {"q": "Bernoulli's equation relates to?", "options": ["Energy", "Momentum", "Force"], "a": "Energy"},
+            # مسائل حسابية (Calculations) من الصور
+            {"q": "A hydraulic lift has a small piston area (A1) of 0.20 m² and a large piston area (A2) of 0.90 m². If a force (F2) of 1.20 x 10⁴ N is supported, calculate F1.", "options": ["2.7 x 10³ N", "5.4 x 10³ N", "1.5 x 10³ N", "2.7 x 10² N"], "a": "2.7 x 10³ N"},
+            {"q": "If the radius of the large piston in a hydraulic press is 4 times the radius of the small piston, what is the force multiplication factor?", "options": ["16 times", "4 times", "8 times", "2 times"], "a": "16 times"},
+            {"q": "A crown weighs 7.84 N in air and 6.86 N in water. Calculate the density of the crown (ρ_water = 1000 kg/m³).", "options": ["8.0 x 10³ kg/m³", "19.3 x 10³ kg/m³", "10.0 x 10³ kg/m³", "7.8 x 10³ kg/m³"], "a": "8.0 x 10³ kg/m³"},
+            {"q": "Water flows through a pipe at 2 m/s. If the pipe narrows to 1/4 of its original area, what is the new velocity?", "options": ["8 m/s", "4 m/s", "0.5 m/s", "16 m/s"], "a": "8 m/s"},
+            {"q": "Calculate the absolute pressure at a depth of 10m in water. (P_atm = 1.01 x 10⁵ Pa, ρ=1000, g=9.8)", "options": ["1.99 x 10⁵ Pa", "0.98 x 10⁵ Pa", "1.01 x 10⁵ Pa", "2.50 x 10⁵ Pa"], "a": "1.99 x 10⁵ Pa"},
+            {"q": "A block of wood (ρ = 700 kg/m³) floats in water. What percentage of the block is submerged?", "options": ["70%", "30%", "100%", "50%"], "a": "70%"},
+            {"q": "If a fluid's speed increases from 2 m/s to 6 m/s in a horizontal pipe, the pressure in the fast-moving region will:", "options": ["Decrease", "Increase", "Remain same", "Double"], "a": "Decrease"},
+            # أسئلة التريكات (Tricky)
+            {"q": "An iron ball and an aluminum ball of the same VOLUME are submerged in water. Which experiences a greater buoyant force?", "options": ["Both the same", "Iron ball", "Aluminum ball", "Depends on mass"], "a": "Both the same"},
+            {"q": "If the diameter of a pipe is doubled, the cross-sectional area increases by:", "options": ["4 times", "2 times", "8 times", "16 times"], "a": "4 times"},
+            {"q": "According to Pascal's Principle, pressure applied to a fluid in a closed container is transmitted equally to:", "options": ["Every point in the fluid", "The bottom only", "The walls only", "The pistons only"], "a": "Every point in the fluid"},
+            {"q": "A boat moves from fresh water (ρ=1000) to salt water (ρ=1025). The buoyant force on the boat will:", "options": ["Stay the same (it still floats)", "Increase", "Decrease", "Become zero"], "a": "Stay the same (it still floats)"},
+            {"q": "The continuity equation (A1v1 = A2v2) is a statement of the conservation of:", "options": ["Mass", "Energy", "Momentum", "Pressure"], "a": "Mass"},
+            {"q": "As an object sinks deeper into a fluid (fully submerged), the buoyant force on it:", "options": ["Remains constant", "Increases", "Decreases", "Becomes zero"], "a": "Remains constant"},
+            {"q": "Gauge pressure is defined as:", "options": ["P_total - P_atm", "P_total + P_atm", "P_atm - P_total", "P_total / P_atm"], "a": "P_total - P_atm"},
+            {"q": "Which of these is NOT a fluid?", "options": ["Steel sphere", "Water vapor", "Olive oil", "Atmospheric air"], "a": "Steel sphere"}
         ],
         "Electricity ⚡": [
             {"q": "What is the SI unit of electric current?", "options": ["Volt", "Ampere", "Ohm"], "a": "Ampere"},
@@ -74,7 +81,7 @@ def get_questions_by_lesson():
         ]
     }
 
-# --- 5. تهيئة البيانات ---
+# --- 5. تهيئة البيانات وحساب النقاط ---
 if 'records' not in st.session_state:
     st.session_state.records = load_logs()
 
@@ -152,6 +159,7 @@ else:
                     if st.text_input("Quiz Key:", type="password") == "Hyper2026" and st.button("Start Mission"):
                         st.session_state.quiz_active = True
                         st.session_state.quiz_start_time = time.time()
+                        # اختيار 10 عشوائي فقط للكويز
                         st.session_state.quiz_questions = random.sample(get_questions_by_lesson()[selected_lesson], 10)
                         st.rerun()
                 else:
@@ -166,20 +174,16 @@ else:
                             st.session_state.quiz_active = False; st.session_state.page = "dashboard"; st.rerun()
         
         else: # Assignment Mode 📚
-            st.info("🎯 Practice Mode - Check your answers!")
+            st.info("🎯 Practice Mode - Answer all questions in the bank!")
             lessons = list(get_questions_by_lesson().keys())
+            selected_lesson = st.selectbox("Select Lesson to Practice:", lessons)
             
-            # منعاً للـ Error؛ بنستخدم selectbox عادي وبنحمل الأسئلة بناء عليه
-            selected_lesson = st.selectbox("Select Lesson for Assignment:", lessons)
-            
-            # تحميل الأسئلة في الـ session_state عشان ميتغيروش مع كل ريفريش
-            if 'as_questions' not in st.session_state or st.session_state.get('last_lesson') != selected_lesson:
-                st.session_state.as_questions = random.sample(get_questions_by_lesson()[selected_lesson], 5)
-                st.session_state.last_lesson = selected_lesson
+            # في الأسايمنت بنجيب كل الأسئلة مش عينة عشوائية
+            all_practice_questions = get_questions_by_lesson()[selected_lesson]
 
             with st.form("assignment_form"):
                 user_answers = {}
-                for i, q in enumerate(st.session_state.as_questions):
+                for i, q in enumerate(all_practice_questions):
                     st.write(f"**Q{i+1}: {q['q']}**")
                     user_answers[i] = st.radio(f"Select Q{i}", q['options'], key=f"as_q_{i}", label_visibility="collapsed")
                 
@@ -188,7 +192,7 @@ else:
             if check:
                 st.markdown("---")
                 score = 0
-                for i, q in enumerate(st.session_state.as_questions):
+                for i, q in enumerate(all_practice_questions):
                     is_correct = user_answers[i] == q['a']
                     if is_correct: score += 1
                     
@@ -202,6 +206,6 @@ else:
                         </div>
                     """, unsafe_allow_html=True)
                 
-                st.markdown(f"<div class='result-box'><h2>Total Score: {score}/{len(st.session_state.as_questions)}</h2></div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='result-box'><h2>Total Score: {score}/{len(all_practice_questions)}</h2></div>", unsafe_allow_html=True)
 
         if st.button("Logout"): del st.session_state.user; st.rerun()
