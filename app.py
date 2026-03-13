@@ -5,8 +5,7 @@ import pandas as pd
 import os
 from datetime import datetime
 import pytz
-from streamlit_autorefresh import st_autorefresh
-
+from streamlit_autorefresh import st_autorefresh # السطر ده مهم جداً
 # --- 1. الإعدادات والبراندنج (Hyper Torque Style) ---
 st.set_page_config(page_title="Hyper Torque Academy", page_icon="⚡", layout="wide")
 
