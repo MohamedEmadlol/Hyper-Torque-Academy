@@ -76,7 +76,6 @@ def get_questions_by_lesson():
             {"q": "Which of these are considered fluids?", "options": ["Liquid and Gas", "Solid and Liquid", "Solid only", "Gas only"], "a": "Liquid and Gas"},
             {"q": "In a hydraulic system, if you triple the area of the output piston, the output force will:", "options": ["Triple", "Divide by 3", "Increase 9x", "Same"], "a": "Triple"},
             {"q": "As an object sinks deeper (fully submerged), the buoyant force:", "options": ["Increases", "Remains constant", "Decreases", "Becomes zero"], "a": "Remains constant"},
-            {"q": "The SI unit of density is:", "options": ["kg/m2", "kg/m3", "N/m2", "Pascal"], "a": "kg/m3"},
             {"q": "Viscosity measures:", "options": ["Flow resistance", "Density", "Pressure", "Mass"], "a": "Flow resistance"},
             {"q": "100 cm2 to m2 conversion factor is:", "options": ["0.1", "0.01", "1.0", "10"], "a": "0.01"},
             {"q": "Pressure is calculated as:", "options": ["Mass / Volume", "Force / Area", "Force * Area", "Mass * Gravity"], "a": "Force / Area"},
