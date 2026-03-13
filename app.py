@@ -238,64 +238,105 @@ else:
             st.info("🎯 Practice Mode - Check your answers!")
             
             # إعداد Assignment
-            if 'assignment_questions' not in st.session_state:
+            if 'assignment_lesson' not in st.session_state:
                 lessons = list(get_questions_by_lesson().keys())
-                selected_lesson = st.selectbox("Select Lesson for Assignment:", lessons, key="assign_lesson")
-                questions = get_questions_by_lesson()[selected_lesson]
-                num_questions = min(10, len(questions))  # نفس عدد Live Quiz
+                st.session_state.assignment_lesson = st.selectbox("Select Lesson for Assignment:", lessons, key="assign_lesson")
+                questions = get_questions_by_lesson()[st.session_state.assignment_lesson]
+                num_questions = min(10, len(questions))
                 st.session_state.assignment_questions = random.sample(questions, num_questions)
                 st.session_state.assignment_answers = {}
+                st.session_state.assignment_submitted = False
             
-            # عرض الأسئلة مع form للإجابات
-            with st.form("assignment_form"):
+            selected_lesson = st.session_state.assignment_lesson
+            
+            # إعادة تحميل الأسئلة لو غير الدرس
+            if 'assignment_lesson_changed' in st.session_state and st.session_state.assignment_lesson_changed:
+                questions = get_questions_by_lesson()[selected_lesson]
+                num_questions = min(10, len(questions))
+                st.session_state.assignment_questions = random.sample(questions, num_questions)
+                st.session_state.assignment_answers = {}
+                st.session_state.assignment_submitted = False
+                del st.session_state.assignment_lesson_changed
+                st.rerun()
+            
+            questions = st.session_state.assignment_questions
+            
+            # عرض الأسئلة
+            with st.form("assignment_form", clear_on_submit=False):
                 st.markdown("### 📝 Answer all questions:")
-                for i, q in enumerate(st.session_state.assignment_questions):
+                for i, q in enumerate(questions):
                     st.write(f"**Q{i+1}: {q['q']}**")
+                    default_index = 0
+                    if i in st.session_state.assignment_answers:
+                        try:
+                            default_index = q['options'].index(st.session_state.assignment_answers[i])
+                        except:
+                            default_index = 0
+                    
                     st.session_state.assignment_answers[i] = st.radio(
                         "Your Answer:", q['options'], 
                         key=f"assign_q{i}", 
-                        label_visibility="collapsed"
+                        label_visibility="collapsed",
+                        index=default_index
                     )
                 
-                col1, col2 = st.columns([3, 1])
+                col1, col2, col3 = st.columns([2, 1, 1])
                 with col2:
-                    if st.form_submit_button("✅ Check Answers", use_container_width=True):
-                        # حساب النتيجة وعرضها
-                        score = 0
-                        total = len(st.session_state.assignment_questions)
-                        
-                        st.markdown(f"""
-                        <div class='result-box'>
-                            <h2>🎯 Your Result: <span class='correct'>{score}/{total}</span></h2>
-                            <h3>{int((score/total)*100)}% Correct</h3>
-                        </div>
-                        """, unsafe_allow_html=True)
-                        
-                        # عرض الأسئلة مع الإجابات الصحيحة
-                        for i, q in enumerate(st.session_state.assignment_questions):
-                            user_ans = st.session_state.assignment_answers[i]
-                            correct_ans = q['a']
-                            is_correct = user_ans == correct_ans
-                            
-                            st.markdown(f"""
-                            <div style='padding: 15px; margin: 10px 0; 
-                                        background-color: {'#1e2130' if is_correct else '#2a1f2f'};
-                                        border-left: 5px solid {'#00ff88' if is_correct else '#ff4b4b'};
-                                        border-radius: 8px;'>
-                                <h4>Q{i+1}: {q['q']}</h4>
-                                <p><strong>Your Answer:</strong> <span class={'correct' if is_correct else 'wrong'}>{user_ans}</span></p>
-                                <p><strong>✅ Correct Answer:</strong> <span class='correct'>{correct_ans}</span></p>
-                            </div>
-                            """, unsafe_allow_html=True)
-                        
-                        st.success("✨ Practice completed! Try another lesson.")
+                    submitted = st.form_submit_button("✅ Check Answers", use_container_width=True)
+                with col3:
+                    if st.form_submit_button("🔄 New Questions", use_container_width=True):
+                        st.session_state.assignment_lesson_changed = True
                         st.rerun()
-        
-        if st.button("Logout"):
-            # تنظيف بيانات الـ Assignment
-            if 'assignment_questions' in st.session_state:
-                del st.session_state.assignment_questions
-                del st.session_state.assignment_answers
-            st.session_state.quiz_active = False
-            if 'user' in st.session_state: del st.session_state.user
-            st.rerun()
+            
+            # حساب وعرض النتيجة بعد الضغط على Check Answers
+            if submitted and st.session_state.assignment_questions:
+                st.markdown("---")
+                st.markdown("""
+                <div class='result-box'>
+                    <h2>🎯 YOUR RESULTS</h2>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                score = 0
+                total = len(st.session_state.assignment_questions)
+                results = []
+                
+                for i, q in enumerate(st.session_state.assignment_questions):
+                    user_ans = st.session_state.assignment_answers.get(i, "")
+                    correct_ans = q['a']
+                    is_correct = user_ans == correct_ans
+                    
+                    if is_correct:
+                        score += 1
+                    
+                    results.append({
+                        'question': q['q'],
+                        'user_answer': user_ans,
+                        'correct_answer': correct_ans,
+                        'is_correct': is_correct
+                    })
+                
+                # عرض النتيجة النهائية
+                percentage = int((score / total) * 100)
+                result_message = "Excellent! 👏" if percentage >= 80 else "Good! 👍" if percentage >= 60 else "Keep Practicing! 💪"
+                st.markdown(f"""
+                <div class='result-box'>
+                    <h1 style='color: #00ff88;'>{score}/{total}</h1>
+                    <h2>{percentage}% 🎯</h2>
+                    <h4>{result_message}</h4>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                # عرض تفاصيل كل سؤال
+                st.markdown("### 📋 Detailed Results:")
+                for i, result in enumerate(results):
+                    color = "correct" if result['is_correct'] else "wrong"
+                    icon = "✅" if result['is_correct'] else "❌"
+                    st.markdown(f"""
+                    <div style='padding: 15px; margin: 10px 0; 
+                                background-color: #1e2130;
+                                border-left: 6px solid {'#00ff88' if result['is_correct'] else '#ff4b4b'};
+                                border-radius: 8px;'>
+                        <h4>{icon} Q{i+1}: {result['question']}</h4>
+                        <p><strong>👤 You chose:</strong> <span class='{color}'>{result['user_answer']}</span></p>
+                        <p><strong>✅ Correct:</strong
