@@ -16,6 +16,9 @@ st.markdown("""
     .stMetric { background-color: #1e2130; padding: 15px; border-radius: 10px; border: 2px solid #ff4b4b; }
     h1, h2, h3 { color: #ff4b4b; text-align: center; font-family: 'Trebuchet MS'; }
     .timer-box { background-color: #1e2130; padding: 10px; border-radius: 10px; border: 2px solid #ff4b4b; text-align: center; margin-bottom: 20px; }
+    .result-box { background-color: #1e2130; padding: 20px; border-radius: 15px; border: 3px solid #00ff88; margin: 20px 0; text-align: center; }
+    .correct { color: #00ff88; font-weight: bold; }
+    .wrong { color: #ff4b4b; font-weight: bold; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -87,12 +90,6 @@ def get_questions_by_lesson():
             {"q": "Series resistors add ____.", "options": ["Directly", "Inversely", "Square"], "a": "Directly"},
             {"q": "Parallel resistors add ____.", "options": ["Directly", "Inversely", "Square"], "a": "Inversely"},
         ],
-        
-        # ============================================
-        # 📌 ⚠️ ⚠️ ⚠️ أضف دروس جديدة هنا ⚠️ ⚠️ ⚠️
-        # 📌 مثال: Mechanics, Optics, Thermodynamics
-        # 📌 خد نفس التنسيق: "اسم الدرس 🎯": [{"q": "السؤال", "options": ["الخيارات"], "a": "الإجابة"}, ...]
-        # ============================================
     }
 
 # --- 5. تهيئة البيانات ---
@@ -125,7 +122,6 @@ with st.sidebar:
     if st.session_state.records:
         student_only = [r for r in st.session_state.records if r.get('Student') != "ADMIN_ADJUST"]
         for log in reversed(student_only[-5:]):
-            # ⚠️ ⚠️ ⚠️ هنا تم إضافة اليوم جنب التاريخ مع معالجة الأخطاء ⚠️ ⚠️ ⚠️
             day = log.get('Day', 'N/A')
             st.caption(f"📅 {log.get('Date', 'N/A')} ({day}) | {log.get('Time', 'N/A')}")
             st.write(f"✅ **{log.get('Student', 'Unknown')}** ({log.get('Class', 'N/A')}) - `{log.get('Score', 'N/A')}`")
@@ -154,7 +150,7 @@ if is_admin:
                 "Class": "SYSTEM", 
                 "House": h_sel, 
                 "Score": adj, 
-                "Day": now_egy.strftime("%A"),  # ⚠️ إضافة اليوم
+                "Day": now_egy.strftime("%A"),
                 "Date": now_egy.strftime("%Y-%m-%d"), 
                 "Time": now_egy.strftime("%I:%M:%S %p")
             }
@@ -191,7 +187,6 @@ else:
                 if 'quiz_active' not in st.session_state: st.session_state.quiz_active = False
                 
                 if not st.session_state.quiz_active:
-                    # ⚠️ ⚠️ ⚠️ هنا اختيار الدرس اللي عايز تمتحن عليه ⚠️ ⚠️ ⚠️
                     lessons = list(get_questions_by_lesson().keys())
                     selected_lesson = st.selectbox("Select Lesson:", lessons)
                     
@@ -200,7 +195,6 @@ else:
                         st.session_state.quiz_active = True
                         st.session_state.quiz_start_time = time.time()
                         st.session_state.selected_lesson = selected_lesson
-                        # ⚠️ ⚠️ ⚠️ تصحيح: نأخذ أقل عدد من الأسئلة المتاحة ⚠️ ⚠️ ⚠️
                         questions = get_questions_by_lesson()[selected_lesson]
                         num_questions = min(10, len(questions))
                         st.session_state.quiz_questions = random.sample(questions, num_questions)
@@ -229,7 +223,7 @@ else:
                                 "House": st.session_state.u_house, 
                                 "Score": f"{score}/{len(st.session_state.quiz_questions)}", 
                                 "Lesson": st.session_state.selected_lesson,
-                                "Day": now_egy.strftime("%A"),  # ⚠️ إضافة اليوم
+                                "Day": now_egy.strftime("%A"),
                                 "Date": now_egy.strftime("%Y-%m-%d"), 
                                 "Time": now_egy.strftime("%I:%M:%S %p")
                             }
@@ -239,15 +233,69 @@ else:
                             st.session_state.quiz_active = False
                             st.session_state.page = "dashboard"
                             st.rerun()
-        else:
-            st.info("Practice Mode - No scores recorded.")
-            lessons = list(get_questions_by_lesson().keys())
-            selected_lesson = st.selectbox("Select Lesson for Practice:", lessons)
-            for q in get_questions_by_lesson()[selected_lesson]:
-                st.write(f"**{q['q']}**")
-                st.radio("Practice:", q['options'], key="as_"+q['q'])
+        
+        else:  # Assignment Mode 📚
+            st.info("🎯 Practice Mode - Check your answers!")
+            
+            # إعداد Assignment
+            if 'assignment_questions' not in st.session_state:
+                lessons = list(get_questions_by_lesson().keys())
+                selected_lesson = st.selectbox("Select Lesson for Assignment:", lessons, key="assign_lesson")
+                questions = get_questions_by_lesson()[selected_lesson]
+                num_questions = min(10, len(questions))  # نفس عدد Live Quiz
+                st.session_state.assignment_questions = random.sample(questions, num_questions)
+                st.session_state.assignment_answers = {}
+            
+            # عرض الأسئلة مع form للإجابات
+            with st.form("assignment_form"):
+                st.markdown("### 📝 Answer all questions:")
+                for i, q in enumerate(st.session_state.assignment_questions):
+                    st.write(f"**Q{i+1}: {q['q']}**")
+                    st.session_state.assignment_answers[i] = st.radio(
+                        "Your Answer:", q['options'], 
+                        key=f"assign_q{i}", 
+                        label_visibility="collapsed"
+                    )
+                
+                col1, col2 = st.columns([3, 1])
+                with col2:
+                    if st.form_submit_button("✅ Check Answers", use_container_width=True):
+                        # حساب النتيجة وعرضها
+                        score = 0
+                        total = len(st.session_state.assignment_questions)
+                        
+                        st.markdown(f"""
+                        <div class='result-box'>
+                            <h2>🎯 Your Result: <span class='correct'>{score}/{total}</span></h2>
+                            <h3>{int((score/total)*100)}% Correct</h3>
+                        </div>
+                        """, unsafe_allow_html=True)
+                        
+                        # عرض الأسئلة مع الإجابات الصحيحة
+                        for i, q in enumerate(st.session_state.assignment_questions):
+                            user_ans = st.session_state.assignment_answers[i]
+                            correct_ans = q['a']
+                            is_correct = user_ans == correct_ans
+                            
+                            st.markdown(f"""
+                            <div style='padding: 15px; margin: 10px 0; 
+                                        background-color: {'#1e2130' if is_correct else '#2a1f2f'};
+                                        border-left: 5px solid {'#00ff88' if is_correct else '#ff4b4b'};
+                                        border-radius: 8px;'>
+                                <h4>Q{i+1}: {q['q']}</h4>
+                                <p><strong>Your Answer:</strong> <span class={'correct' if is_correct else 'wrong'}>{user_ans}</span></p>
+                                <p><strong>✅ Correct Answer:</strong> <span class='correct'>{correct_ans}</span></p>
+                            </div>
+                            """, unsafe_allow_html=True)
+                        
+                        st.success("✨ Practice completed! Try another lesson.")
+                        st.rerun()
         
         if st.button("Logout"):
+            # تنظيف بيانات الـ Assignment
+            if 'assignment_questions' in st.session_state:
+                del st.session_state.assignment_questions
+                del st.session_state.assignment_answers
             st.session_state.quiz_active = False
-            del st.session_state.user
+            if 'user' in st.session_state: del st.session_state.user
             st.rerun()
