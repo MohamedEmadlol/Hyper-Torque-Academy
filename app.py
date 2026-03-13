@@ -6,7 +6,7 @@ import os
 from datetime import datetime
 import pytz
 
-# --- 1. الإعدادات والبراندنج ---
+# --- 1. الإعدادات والبراندنج مع JavaScript للتحديث المباشر ---
 st.set_page_config(page_title="Hyper Torque Academy", page_icon="⚡", layout="wide")
 
 st.markdown("""
@@ -17,6 +17,34 @@ st.markdown("""
     h1, h2, h3 { color: #ff4b4b; text-align: center; font-family: 'Trebuchet MS'; }
     .timer-box { background-color: #1e2130; padding: 10px; border-radius: 10px; border: 2px solid #ff4b4b; text-align: center; margin-bottom: 20px; }
     </style>
+    
+    <!-- JavaScript لتحديث الساعة مباشرة في المتصفح -->
+    <script>
+    // دالة لتحديث الساعة في الـ sidebar
+    function updateClock() {
+        const options = { 
+            timeZone: 'Africa/Cairo',
+            hour: '2-digit', 
+            minute: '2-digit', 
+            second: '2-digit',
+            hour12: true 
+        };
+        
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('en-US', options);
+        
+        // البحث عن عنصر الساعة وتحديثه
+        const clockElements = document.querySelectorAll('[data-testid="stSidebar"] p');
+        clockElements.forEach(el => {
+            if (el.textContent.includes('🕒 Clock:')) {
+                el.innerHTML = `🕒 Clock: <strong>${timeString}</strong>`;
+            }
+        });
+    }
+    
+    // تحديث الساعة كل ثانية
+    setInterval(updateClock, 1000);
+    </script>
     """, unsafe_allow_html=True)
 
 # توقيت القاهرة الثابت
@@ -90,8 +118,6 @@ def get_questions_by_lesson():
         
         # ============================================
         # 📌 ⚠️ ⚠️ ⚠️ أضف دروس جديدة هنا ⚠️ ⚠️ ⚠️
-        # 📌 مثال: Mechanics, Optics, Thermodynamics
-        # 📌 خد نفس التنسيق: "اسم الدرس 🎯": [{"q": "السؤال", "options": ["الخيارات"], "a": "الإجابة"}, ...]
         # ============================================
     }
 
@@ -125,7 +151,6 @@ with st.sidebar:
     if st.session_state.records:
         student_only = [r for r in st.session_state.records if r.get('Student') != "ADMIN_ADJUST"]
         for log in reversed(student_only[-5:]):
-            # ⚠️ ⚠️ ⚠️ هنا تم إضافة اليوم جنب التاريخ مع معالجة الأخطاء ⚠️ ⚠️ ⚠️
             day = log.get('Day', 'N/A')
             st.caption(f"📅 {log.get('Date', 'N/A')} ({day}) | {log.get('Time', 'N/A')}")
             st.write(f"✅ **{log.get('Student', 'Unknown')}** ({log.get('Class', 'N/A')}) - `{log.get('Score', 'N/A')}`")
@@ -154,7 +179,7 @@ if is_admin:
                 "Class": "SYSTEM", 
                 "House": h_sel, 
                 "Score": adj, 
-                "Day": now_egy.strftime("%A"),  # ⚠️ إضافة اليوم
+                "Day": now_egy.strftime("%A"),
                 "Date": now_egy.strftime("%Y-%m-%d"), 
                 "Time": now_egy.strftime("%I:%M:%S %p")
             }
@@ -191,7 +216,6 @@ else:
                 if 'quiz_active' not in st.session_state: st.session_state.quiz_active = False
                 
                 if not st.session_state.quiz_active:
-                    # ⚠️ ⚠️ ⚠️ هنا اختيار الدرس اللي عايز تمتحن عليه ⚠️ ⚠️ ⚠️
                     lessons = list(get_questions_by_lesson().keys())
                     selected_lesson = st.selectbox("Select Lesson:", lessons)
                     
@@ -199,19 +223,53 @@ else:
                     if st.button("Start Mission") and pwd == "Hyper2026":
                         st.session_state.quiz_active = True
                         st.session_state.quiz_start_time = time.time()
+                        st.session_state.quiz_end_time = time.time() + (15 * 60)  # 15 دقيقة
                         st.session_state.selected_lesson = selected_lesson
-                        # ⚠️ ⚠️ ⚠️ تصحيح: نأخذ أقل عدد من الأسئلة المتاحة ⚠️ ⚠️ ⚠️
                         questions = get_questions_by_lesson()[selected_lesson]
                         num_questions = min(10, len(questions))
                         st.session_state.quiz_questions = random.sample(questions, num_questions)
                         st.rerun()
                 else:
-                    remaining = (15*60) - (time.time() - st.session_state.quiz_start_time)
+                    # حساب الوقت المتبقي من جانب السيرفر (للتحقق)
+                    remaining = st.session_state.quiz_end_time - time.time()
+                    
                     if remaining <= 0: 
                         st.session_state.quiz_active = False
                         st.rerun()
                     
-                    st.markdown(f"<div class='timer-box'><h3>⏳ Time: {int(remaining//60)}:{int(remaining%60):02d}</h3></div>", unsafe_allow_html=True)
+                    # تايمر بتحديث مباشر باستخدام JavaScript
+                    timer_html = f"""
+                    <div class='timer-box'>
+                        <h3 id="live-timer">⏳ Time: {int(remaining//60)}:{int(remaining%60):02d}</h3>
+                    </div>
+                    
+                    <script>
+                    (function() {{
+                        const endTime = {st.session_state.quiz_end_time};
+                        
+                        function updateTimer() {{
+                            const now = Date.now() / 1000;
+                            const remaining = Math.max(0, endTime - now);
+                            
+                            if (remaining <= 0) {{
+                                document.getElementById('live-timer').innerHTML = '⏳ Time: 0:00';
+                                setTimeout(() => window.location.reload(), 1000);
+                                return;
+                            }}
+                            
+                            const minutes = Math.floor(remaining / 60);
+                            const seconds = Math.floor(remaining % 60);
+                            document.getElementById('live-timer').innerHTML = 
+                                `⏳ Time: ${{minutes}}:${{seconds < 10 ? '0' : ''}}${{seconds}}`;
+                        }}
+                        
+                        updateTimer();
+                        setInterval(updateTimer, 1000);
+                    }})();
+                    </script>
+                    """
+                    
+                    st.markdown(timer_html, unsafe_allow_html=True)
                     st.markdown(f"**📚 Lesson:** {st.session_state.selected_lesson}")
                     
                     with st.form("quiz_form"):
@@ -221,7 +279,13 @@ else:
                             answers[i] = st.radio("Choose:", q['options'], key=f"q{i}", label_visibility="collapsed")
                         
                         if st.form_submit_button("Submit Deployment"):
-                            score = sum(1 for i, q in enumerate(st.session_state.quiz_questions) if answers[i] == q['a'])
+                            # التحقق من أن الوقت لم ينتهي
+                            if time.time() > st.session_state.quiz_end_time:
+                                st.error("⏰ Time's up! Quiz automatically submitted.")
+                                score = 0
+                            else:
+                                score = sum(1 for i, q in enumerate(st.session_state.quiz_questions) if answers[i] == q['a'])
+                            
                             now_egy = datetime.now(egy_tz)
                             log = {
                                 "Student": st.session_state.user, 
@@ -229,7 +293,7 @@ else:
                                 "House": st.session_state.u_house, 
                                 "Score": f"{score}/{len(st.session_state.quiz_questions)}", 
                                 "Lesson": st.session_state.selected_lesson,
-                                "Day": now_egy.strftime("%A"),  # ⚠️ إضافة اليوم
+                                "Day": now_egy.strftime("%A"),
                                 "Date": now_egy.strftime("%Y-%m-%d"), 
                                 "Time": now_egy.strftime("%I:%M:%S %p")
                             }
