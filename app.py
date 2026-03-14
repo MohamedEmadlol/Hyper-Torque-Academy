@@ -22,21 +22,26 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
+# توقيت القاهرة الثابت
 egy_tz = pytz.timezone('Africa/Cairo')
 
-# --- 3. محرك حفظ البيانات ---
+# --- 2. محرك حفظ البيانات ---
 def save_log_to_csv(entry):
     file_path = 'hyper_torque_final_db.csv'
     df = pd.DataFrame([entry])
-    df.to_csv(file_path, mode='a', header=not os.path.exists(file_path), index=False)
+    if not os.path.isfile(file_path):
+        df.to_csv(file_path, index=False)
+    else:
+        df.to_csv(file_path, mode='a', header=False, index=False)
 
 def load_logs():
-    if os.path.isfile('hyper_torque_final_db.csv'):
-        try: return pd.read_csv('hyper_torque_final_db.csv').to_dict('records')
+    file_path = 'hyper_torque_final_db.csv'
+    if os.path.isfile(file_path):
+        try: return pd.read_csv(file_path).to_dict('records')
         except: return []
     return []
 
-# --- 4. قاعدة بيانات الطلاب ---
+# --- 3. قاعدة بيانات الطلاب والبيوت ---
 STUDENT_DB = {
     "12-A": ["Mohamed Emad", "Ahmed Ali", "Sara Hassan"],
     "12-B": ["Eren Yeager", "Mikasa Ackerman", "Armin Arlert"],
@@ -48,7 +53,7 @@ CLASS_HOUSES = {
     "12-C": ["Survey Corps 🕊️", "Wall Rose 🏰", "Wall Maria 🧱"]
 }
 
-# --- 5. مخزن الأسئلة (25 سؤال موسع من الصور) ---
+# --- 4. مخزن الأسئلة (25 سؤال موسع) ---
 def get_questions_by_lesson():
     return {
         "Fluid Mechanics 🌊": [
@@ -56,18 +61,19 @@ def get_questions_by_lesson():
             {"q": "If the radius of the large piston is 4 times the small piston radius, the force multiplication is:", "options": ["4 times", "8 times", "16 times", "2 times"], "a": "16 times"},
             {"q": "A crown weighs 7.84 N in air and 6.86 N in water. Its density is:", "options": ["19.3 x 10³ kg/m³", "8.0 x 10³ kg/m³", "10.0 x 10³ kg/m³", "2.7 x 10³ kg/m³"], "a": "8.0 x 10³ kg/m³"},
             {"q": "Water flows through a pipe at 2 m/s. If the pipe narrows to 1/4 of its area, the new velocity is:", "options": ["0.5 m/s", "4 m/s", "16 m/s", "8 m/s"], "a": "8 m/s"},
-            {"q": "An iron ball and an aluminum ball of the same VOLUME are submerged in water. Which experiences a greater buoyant force?", "options": ["Iron ball", "Aluminum ball", "Both the same", "Depends on mass"], "a": "Both the same"},
-            {"q": "Calculate absolute pressure at 10m depth (P_atm=1.01x10⁵ Pa, ρ=1000, g=9.8):", "options": ["1.01 x 10⁵ Pa", "1.99 x 10⁵ Pa", "0.98 x 10⁵ Pa", "2.50 x 10⁵ Pa"], "a": "1.99 x 10⁵ Pa"},
+            {"q": "Iron and aluminum balls of the same VOLUME are submerged in water. Which experiences a greater buoyant force?", "options": ["Iron ball", "Aluminum ball", "Both the same", "Depends on mass"], "a": "Both the same"},
             {"q": "If pipe diameter is doubled, the area increases by:", "options": ["2 times", "8 times", "16 times", "4 times"], "a": "4 times"},
-            {"q": "The continuity equation (A1v1 = A2v2) is a statement of conservation of:", "options": ["Energy", "Momentum", "Mass", "Pressure"], "a": "Mass"},
+            {"q": "Calculate absolute pressure at 10m depth (P_atm=1.01x10⁵ Pa, ρ=1000, g=9.8):", "options": ["1.01 x 10⁵ Pa", "1.99 x 10⁵ Pa", "0.98 x 10⁵ Pa", "2.50 x 10⁵ Pa"], "a": "1.99 x 10⁵ Pa"},
+            {"q": "Continuity equation (A1v1 = A2v2) results from conservation of:", "options": ["Energy", "Momentum", "Mass", "Pressure"], "a": "Mass"},
             {"q": "A boat moves from fresh water to salt water. The buoyant force:", "options": ["Increases", "Decreases", "Stays the same", "Disappears"], "a": "Stays the same"},
-            {"q": "Gauge pressure formula is:", "options": ["P_total + P_atm", "P_atm - P_total", "P_total - P_atm", "P_total / P_atm"], "a": "P_total - P_atm"},
+            {"q": "Gauge pressure is defined as:", "options": ["P_total + P_atm", "P_atm - P_total", "P_total - P_atm", "P_total / P_atm"], "a": "P_total - P_atm"},
             {"q": "What is the SI unit of mass density?", "options": ["kg/m³", "kg/m²", "Newton/m³", "Pascal"], "a": "kg/m³"},
             {"q": "Pascal's principle states pressure in a closed container is transmitted equally to:", "options": ["The bottom only", "The walls only", "Every point in the fluid", "The pistons only"], "a": "Every point in the fluid"},
             {"q": "If an object is floating, the buoyant force (Fb) is:", "options": ["Equal to weight", "Greater than weight", "Less than weight", "Zero"], "a": "Equal to weight"},
             {"q": "Fluid flows through a pipe that narrows to half its original DIAMETER. The speed will:", "options": ["Increase by 2 times", "Increase by 4 times", "Decrease by 4 times", "Decrease by 2 times"], "a": "Increase by 4 times"},
+            {"q": "Which of these are considered fluids?", "options": ["Liquid and Gas", "Solid and Liquid", "Solid only", "Gas only"], "a": "Liquid and Gas"},
+            {"q": "In a hydraulic system, if you triple the area of the output piston, the force will:", "options": ["Triple", "Divide by 3", "Increase 9x", "Same"], "a": "Triple"},
             {"q": "As an object sinks deeper (fully submerged), the buoyant force:", "options": ["Increases", "Remains constant", "Decreases", "Becomes zero"], "a": "Remains constant"},
-            {"q": "In a hydraulic system, tripling the area of the output piston will:", "options": ["Triple the force", "Divide force by 3", "Increase force 9x", "Not change force"], "a": "Triple the force"},
             {"q": "The SI unit of density is:", "options": ["kg/m2", "kg/m3", "N/m2", "Pascal"], "a": "kg/m3"},
             {"q": "Viscosity measures:", "options": ["Flow resistance", "Density", "Pressure", "Mass"], "a": "Flow resistance"},
             {"q": "100 cm2 to m2 conversion factor is:", "options": ["0.1", "0.01", "1.0", "10"], "a": "0.01"},
@@ -75,8 +81,7 @@ def get_questions_by_lesson():
             {"q": "As a submarine dives deeper, the water pressure against the hull:", "options": ["Decreases", "Increases", "Stays constant", "Becomes zero"], "a": "Increases"},
             {"q": "A 10 kg mass has a density of 2000 kg/m³. Its volume is:", "options": ["0.005 m³", "20,000 m³", "0.05 m³", "2 m³"], "a": "0.005 m³"},
             {"q": "Bernoulli's equation relates to conservation of:", "options": ["Mass", "Momentum", "Energy", "Force"], "a": "Energy"},
-            {"q": "If a gas is compressed to half its volume (constant T), its density:", "options": ["Doubles", "Halves", "Stays same", "Triples"], "a": "Doubles"},
-            {"q": "Which of these are considered fluids?", "options": ["Liquid and Gas", "Solid and Liquid", "Solid only", "Gas only"], "a": "Liquid and Gas"}
+            {"q": "If a gas is compressed to half its volume (constant T), its density:", "options": ["Doubles", "Halves", "Stays same", "Triples"], "a": "Doubles"}
         ],
         "Electricity ⚡": [
             {"q": "The SI unit of electric current is:", "options": ["Volt", "Ampere", "Ohm", "Watt"], "a": "Ampere"},
@@ -84,7 +89,7 @@ def get_questions_by_lesson():
         ]
     }
 
-# --- 6. تهيئة البيانات ---
+# --- 5. تهيئة البيانات ---
 if 'records' not in st.session_state:
     st.session_state.records = load_logs()
 
@@ -104,22 +109,15 @@ for r in st.session_state.records:
     except: pass
 st.session_state.global_scores = global_scores
 
-# --- 7. Sidebar ---
+# --- 6. Sidebar ---
 with st.sidebar:
     st.markdown("## ⚡ HYPER TORQUE ACADEMY")
     st.markdown(f"**🕒 Clock:** `{datetime.now(egy_tz).strftime('%I:%M:%S %p')}`")
     st.markdown("---")
-    st.markdown("### 🟢 Recent Activity")
-    if st.session_state.records:
-        student_only = [r for r in st.session_state.records if r.get('Student') != "ADMIN_ADJUST"]
-        for log in reversed(student_only[-3:]):
-            st.caption(f"📅 {log.get('Date', 'N/A')} ({log.get('Day', 'N/A')}) | {log.get('Time', 'N/A')}")
-            st.write(f"✅ **{log.get('Student', 'Unknown')}** - `{log.get('Score', 'N/A')}`")
-    
     if st.button("🏠 Dashboard"): st.session_state.page = "dashboard"; st.rerun()
-    is_admin = (st.text_input("Admin:", type="password") == "Admin2026")
+    is_admin = (st.text_input("Admin Access:", type="password") == "Admin2026")
 
-# --- 8. منطق الصفحات ---
+# --- 7. منطق الصفحات ---
 if 'page' not in st.session_state: st.session_state.page = "login"
 
 if is_admin:
@@ -128,7 +126,7 @@ if is_admin:
     with t1: st.dataframe(pd.DataFrame(st.session_state.records))
     with t2:
         h_sel = st.selectbox("House:", list(st.session_state.global_scores.keys()))
-        adj = st.number_input("Adjust:", value=0)
+        adj = st.number_input("Adjust Points:", value=0)
         if st.button("Apply"):
             now = datetime.now(egy_tz)
             entry = {"Student": "ADMIN_ADJUST", "Class": "SYSTEM", "House": h_sel, "Score": adj, "Day": now.strftime("%A"), "Date": now.strftime("%Y-%m-%d"), "Time": now.strftime("%I:%M:%S %p")}
@@ -154,10 +152,10 @@ elif st.session_state.page == "dashboard":
         for i, student in enumerate(fame_list[:3]):
             with cols[i]:
                 st.markdown(f"<div class='fame-card'><h1>{medals[i]}</h1><h3>{student['Name']}</h3><p class='correct'>{student['Score']}</p><p>⏱️ {student['Time']}s</p></div>", unsafe_allow_html=True)
-    else: st.info("The Hall of Fame is waiting for its first hero...")
+    else: st.info("The Hall of Fame is waiting...")
 
     st.markdown("---")
-    st.header("🏠 House Leaderboard")
+    st.header("🏠 House Standings")
     sorted_houses = sorted(st.session_state.global_scores.items(), key=lambda x: x[1], reverse=True)
     cols_h = st.columns(3)
     for i, (h, s) in enumerate(sorted_houses):
@@ -186,7 +184,7 @@ else:
                 if 'quiz_active' not in st.session_state: st.session_state.quiz_active = False
                 if not st.session_state.quiz_active:
                     sel_lesson = st.selectbox("Lesson:", list(get_questions_by_lesson().keys()))
-                    if st.text_input("Key:", type="password") == "Hyper2026" and st.button("Start Mission"):
+                    if st.text_input("Quiz Key:", type="password") == "Hyper2026" and st.button("Start Mission"):
                         st.session_state.quiz_active = True
                         st.session_state.quiz_start_time = time.time()
                         st.session_state.quiz_questions = random.sample(get_questions_by_lesson()[sel_lesson], 10)
@@ -205,10 +203,9 @@ else:
                                 now = datetime.now(egy_tz)
                                 log = {"Student": st.session_state.user, "Class": st.session_state.u_class, "House": st.session_state.u_house, "Score": f"{score}/10", "Duration": f"{duration}s", "Day": now.strftime("%A"), "Date": now.strftime("%Y-%m-%d"), "Time": now.strftime("%I:%M:%S %p")}
                                 save_log_to_csv(log); st.session_state.records.append(log)
-                                send_whatsapp_notification(st.session_state.user, f"{score}/10", duration)
                                 st.session_state.quiz_active = False; st.session_state.page = "dashboard"; st.rerun()
         else:
-            st.info("🎯 Practice Mode - Full Bank")
+            st.info("🎯 Practice Mode")
             sel_lesson = st.selectbox("Lesson:", list(get_questions_by_lesson().keys()))
             all_qs = get_questions_by_lesson()[sel_lesson]
             with st.form("as_form"):
