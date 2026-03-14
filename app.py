@@ -5,7 +5,6 @@ import pandas as pd
 import os
 from datetime import datetime
 import pytz
-from twilio.rest import Client
 
 # --- 1. الإعدادات والبراندنج ---
 st.set_page_config(page_title="Hyper Torque Academy", page_icon="⚡", layout="wide")
@@ -24,25 +23,6 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 egy_tz = pytz.timezone('Africa/Cairo')
-
-# --- 2. دالة إرسال الواتساب (Twilio) ---
-def send_whatsapp_notification(student_name, score, duration):
-    # بياناتك الحقيقية من الـ Dashboard
-    account_sid = 'AC921274cce7ec0822ed9d60662083ecee'
-    auth_token = '................................' # ⚠️ ضع التوكن الحقيقي هنا بعد الضغط على Show
-    
-    client = Client(account_sid, auth_token)
-    
-    body = f"⚡ *Hyper Torque Academy*\n\n✅ الطالب: {student_name}\n🎯 السكور: {score}\n⏱️ الوقت المستغرق: {duration} ثانية\n\n_تم تسجيل النتيجة بنجاح!_ 🔥"
-    
-    try:
-        client.messages.create(
-            from_='whatsapp:+14155238886', 
-            body=body, 
-            to='whatsapp:+201206704044'
-        )
-    except Exception as e:
-        print(f"WhatsApp Error: {e}")
 
 # --- 3. محرك حفظ البيانات ---
 def save_log_to_csv(entry):
