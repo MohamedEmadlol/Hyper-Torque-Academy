@@ -22,26 +22,21 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# توقيت القاهرة الثابت
 egy_tz = pytz.timezone('Africa/Cairo')
 
 # --- 2. محرك حفظ البيانات ---
 def save_log_to_csv(entry):
     file_path = 'hyper_torque_final_db.csv'
     df = pd.DataFrame([entry])
-    if not os.path.isfile(file_path):
-        df.to_csv(file_path, index=False)
-    else:
-        df.to_csv(file_path, mode='a', header=False, index=False)
+    df.to_csv(file_path, mode='a', header=not os.path.exists(file_path), index=False)
 
 def load_logs():
-    file_path = 'hyper_torque_final_db.csv'
-    if os.path.isfile(file_path):
-        try: return pd.read_csv(file_path).to_dict('records')
+    if os.path.isfile('hyper_torque_final_db.csv'):
+        try: return pd.read_csv('hyper_torque_final_db.csv').to_dict('records')
         except: return []
     return []
 
-# --- 3. قاعدة بيانات الطلاب والبيوت ---
+# --- 3. الداتا بيز ---
 STUDENT_DB = {
     "12-A": ["Mohamed Emad", "Ahmed Ali", "Sara Hassan"],
     "12-B": ["Eren Yeager", "Mikasa Ackerman", "Armin Arlert"],
@@ -53,18 +48,18 @@ CLASS_HOUSES = {
     "12-C": ["Survey Corps 🕊️", "Wall Rose 🏰", "Wall Maria 🧱"]
 }
 
-# --- 4. مخزن الأسئلة (25 سؤال موسع) ---
+# --- 4. مخزن الأسئلة (25 سؤال متنوع) ---
 def get_questions_by_lesson():
     return {
-        "Fluid Mechanics 🌊": [
+        "Fluid Mechanics (Mastery) 🌊": [
             {"q": "A hydraulic lift has A1 = 0.20 m² and A2 = 0.90 m². If F2 = 1.20 x 10⁴ N, calculate F1.", "options": ["1.5 x 10³ N", "2.7 x 10³ N", "5.4 x 10³ N", "2.7 x 10² N"], "a": "2.7 x 10³ N"},
             {"q": "If the radius of the large piston is 4 times the small piston radius, the force multiplication is:", "options": ["4 times", "8 times", "16 times", "2 times"], "a": "16 times"},
             {"q": "A crown weighs 7.84 N in air and 6.86 N in water. Its density is:", "options": ["19.3 x 10³ kg/m³", "8.0 x 10³ kg/m³", "10.0 x 10³ kg/m³", "2.7 x 10³ kg/m³"], "a": "8.0 x 10³ kg/m³"},
             {"q": "Water flows through a pipe at 2 m/s. If the pipe narrows to 1/4 of its area, the new velocity is:", "options": ["0.5 m/s", "4 m/s", "16 m/s", "8 m/s"], "a": "8 m/s"},
-            {"q": "Iron and aluminum balls of the same VOLUME are submerged in water. Which experiences a greater buoyant force?", "options": ["Iron ball", "Aluminum ball", "Both the same", "Depends on mass"], "a": "Both the same"},
+            {"q": "Iron and aluminum balls of the same VOLUME submerged in water experience:", "options": ["Iron ball", "Aluminum ball", "Both the same", "Depends on mass"], "a": "Both the same"},
             {"q": "If pipe diameter is doubled, the area increases by:", "options": ["2 times", "8 times", "16 times", "4 times"], "a": "4 times"},
             {"q": "Calculate absolute pressure at 10m depth (P_atm=1.01x10⁵ Pa, ρ=1000, g=9.8):", "options": ["1.01 x 10⁵ Pa", "1.99 x 10⁵ Pa", "0.98 x 10⁵ Pa", "2.50 x 10⁵ Pa"], "a": "1.99 x 10⁵ Pa"},
-            {"q": "Continuity equation (A1v1 = A2v2) results from conservation of:", "options": ["Energy", "Momentum", "Mass", "Pressure"], "a": "Mass"},
+            {"q": "Continuity equation (A1v1 = A2v2) is a statement of conservation of:", "options": ["Energy", "Momentum", "Mass", "Pressure"], "a": "Mass"},
             {"q": "A boat moves from fresh water to salt water. The buoyant force:", "options": ["Increases", "Decreases", "Stays the same", "Disappears"], "a": "Stays the same"},
             {"q": "Gauge pressure is defined as:", "options": ["P_total + P_atm", "P_atm - P_total", "P_total - P_atm", "P_total / P_atm"], "a": "P_total - P_atm"},
             {"q": "What is the SI unit of mass density?", "options": ["kg/m³", "kg/m²", "Newton/m³", "Pascal"], "a": "kg/m³"},
@@ -72,8 +67,8 @@ def get_questions_by_lesson():
             {"q": "If an object is floating, the buoyant force (Fb) is:", "options": ["Equal to weight", "Greater than weight", "Less than weight", "Zero"], "a": "Equal to weight"},
             {"q": "Fluid flows through a pipe that narrows to half its original DIAMETER. The speed will:", "options": ["Increase by 2 times", "Increase by 4 times", "Decrease by 4 times", "Decrease by 2 times"], "a": "Increase by 4 times"},
             {"q": "Which of these are considered fluids?", "options": ["Liquid and Gas", "Solid and Liquid", "Solid only", "Gas only"], "a": "Liquid and Gas"},
-            {"q": "In a hydraulic system, if you triple the area of the output piston, the force will:", "options": ["Triple", "Divide by 3", "Increase 9x", "Same"], "a": "Triple"},
             {"q": "As an object sinks deeper (fully submerged), the buoyant force:", "options": ["Increases", "Remains constant", "Decreases", "Becomes zero"], "a": "Remains constant"},
+            {"q": "In a hydraulic system, if you triple the area of the output piston, the force will:", "options": ["Triple", "Divide by 3", "Increase 9x", "Same"], "a": "Triple"},
             {"q": "The SI unit of density is:", "options": ["kg/m2", "kg/m3", "N/m2", "Pascal"], "a": "kg/m3"},
             {"q": "Viscosity measures:", "options": ["Flow resistance", "Density", "Pressure", "Mass"], "a": "Flow resistance"},
             {"q": "100 cm2 to m2 conversion factor is:", "options": ["0.1", "0.01", "1.0", "10"], "a": "0.01"},
@@ -84,8 +79,8 @@ def get_questions_by_lesson():
             {"q": "If a gas is compressed to half its volume (constant T), its density:", "options": ["Doubles", "Halves", "Stays same", "Triples"], "a": "Doubles"}
         ],
         "Electricity ⚡": [
-            {"q": "The SI unit of electric current is:", "options": ["Volt", "Ampere", "Ohm", "Watt"], "a": "Ampere"},
-            {"q": "Ohm's law states V = ?", "options": ["I/R", "IR", "R/I", "I+R"], "a": "IR"}
+            {"q": "The SI unit of electric current is:", "options": ["Volt", "Ohm", "Ampere", "Watt"], "a": "Ampere"},
+            {"q": "Ohm's law is represented by:", "options": ["V = I/R", "V = IR", "V = R/I", "I = V+R"], "a": "V = IR"}
         ]
     }
 
@@ -115,44 +110,46 @@ with st.sidebar:
     st.markdown(f"**🕒 Clock:** `{datetime.now(egy_tz).strftime('%I:%M:%S %p')}`")
     st.markdown("---")
     if st.button("🏠 Dashboard"): st.session_state.page = "dashboard"; st.rerun()
-    is_admin = (st.text_input("Admin Access:", type="password") == "Admin2026")
+    is_admin = (st.text_input("Admin:", type="password") == "Admin2026")
 
 # --- 7. منطق الصفحات ---
 if 'page' not in st.session_state: st.session_state.page = "login"
 
 if is_admin:
     st.title("🛠️ COMMAND CENTER")
-    t1, t2 = st.tabs(["Records", "House Control"])
-    with t1: st.dataframe(pd.DataFrame(st.session_state.records))
-    with t2:
-        h_sel = st.selectbox("House:", list(st.session_state.global_scores.keys()))
-        adj = st.number_input("Adjust Points:", value=0)
-        if st.button("Apply"):
-            now = datetime.now(egy_tz)
-            entry = {"Student": "ADMIN_ADJUST", "Class": "SYSTEM", "House": h_sel, "Score": adj, "Day": now.strftime("%A"), "Date": now.strftime("%Y-%m-%d"), "Time": now.strftime("%I:%M:%S %p")}
-            save_log_to_csv(entry); st.session_state.records.append(entry); st.rerun()
+    st.dataframe(pd.DataFrame(st.session_state.records))
+    h_sel = st.selectbox("House:", list(st.session_state.global_scores.keys()))
+    adj = st.number_input("Adjust:", value=0)
+    if st.button("Apply"):
+        now = datetime.now(egy_tz)
+        entry = {"Student": "ADMIN_ADJUST", "Class": "SYSTEM", "House": h_sel, "Score": adj, "Day": now.strftime("%A"), "Date": now.strftime("%Y-%m-%d"), "Time": now.strftime("%I:%M:%S %p")}
+        save_log_to_csv(entry); st.session_state.records.append(entry); st.rerun()
 
 elif st.session_state.page == "dashboard":
     st.title("🏆 HALL OF FAME")
-    st.subheader("⚡ The Fastest Heroes (Score >= 8)")
+    st.subheader("⚡ The Fastest Top 3 (Score >= 8)")
     
+    # فلترة وترتيب أسرع 3 طلاب (سكور 8/10 فأكثر)
     fame_list = []
     for r in st.session_state.records:
         if r.get('Student') != "ADMIN_ADJUST" and 'Duration' in r:
             try:
-                score_val = int(str(r.get('Score')).split('/')[0])
-                if score_val >= 8:
+                score = int(str(r.get('Score')).split('/')[0])
+                if score >= 8:
                     dur = int(str(r['Duration']).replace('s',''))
-                    fame_list.append({'Name': r['Student'], 'Score': r['Score'], 'Time': dur})
+                    fame_list.append({'Name': r['Student'], 'Score': r['Score'], 'Time': dur, 'Class': r['Class']})
             except: pass
     
     if fame_list:
+        # الترتيب حسب السكور أولاً ثم الوقت الأقل
         fame_list = sorted(fame_list, key=lambda x: (int(x['Score'].split('/')[0]), -x['Time']), reverse=True)
-        cols = st.columns(3); medals = ["🥇", "🥈", "🥉"]
+        cols = st.columns(3)
+        medals = ["🥇", "🥈", "🥉"]
         for i, student in enumerate(fame_list[:3]):
             with cols[i]:
-                st.markdown(f"<div class='fame-card'><h1>{medals[i]}</h1><h3>{student['Name']}</h3><p class='correct'>{student['Score']}</p><p>⏱️ {student['Time']}s</p></div>", unsafe_allow_html=True)
-    else: st.info("The Hall of Fame is waiting...")
+                st.markdown(f"""<div class='fame-card'><h1>{medals[i]}</h1><h3>{student['Name']}</h3>
+                <p class='correct'>{student['Score']}</p><p>⏱️ {student['Time']}s</p></div>""", unsafe_allow_html=True)
+    else: st.write("The Hall of Fame is waiting for its first hero...")
 
     st.markdown("---")
     st.header("🏠 House Standings")
@@ -160,6 +157,7 @@ elif st.session_state.page == "dashboard":
     cols_h = st.columns(3)
     for i, (h, s) in enumerate(sorted_houses):
         with cols_h[i % 3]: st.metric(h, f"{s} Pts")
+    
     if st.button("🚪 Logout"):
         if 'user' in st.session_state: del st.session_state.user
         st.session_state.page = "login"; st.rerun()
@@ -175,16 +173,17 @@ else:
             st.rerun()
     else:
         st.write(f"### Welcome, {st.session_state.user} | {st.session_state.u_house}")
-        mode = st.radio("Activity:", ["Live Quiz 📝", "Assignment 📚"])
+        mode = st.radio("Mode:", ["Live Quiz 📝", "Assignment 📚"])
         
         if mode == "Live Quiz 📝":
             u_id = f"{st.session_state.user}_{st.session_state.u_class}"
-            if u_id in finished_ids: st.error("🛑 Already Submitted.")
+            if u_id in finished_ids: st.error("🛑 Quiz Submitted.")
             else:
                 if 'quiz_active' not in st.session_state: st.session_state.quiz_active = False
                 if not st.session_state.quiz_active:
-                    sel_lesson = st.selectbox("Lesson:", list(get_questions_by_lesson().keys()))
-                    if st.text_input("Quiz Key:", type="password") == "Hyper2026" and st.button("Start Mission"):
+                    lessons = list(get_questions_by_lesson().keys())
+                    sel_lesson = st.selectbox("Lesson:", lessons)
+                    if st.text_input("Key:", type="password") == "Hyper2026" and st.button("Start"):
                         st.session_state.quiz_active = True
                         st.session_state.quiz_start_time = time.time()
                         st.session_state.quiz_questions = random.sample(get_questions_by_lesson()[sel_lesson], 10)
@@ -195,29 +194,28 @@ else:
                     st.markdown(f"<div class='timer-box'><h3>⏳ {int(rem//60)}:{int(rem%60):02d}</h3></div>", unsafe_allow_html=True)
                     with st.form("quiz"):
                         ans = {i: st.radio(f"Q{i+1}: {q['q']}", q['options'], index=None) for i, q in enumerate(st.session_state.quiz_questions)}
-                        if st.form_submit_button("Submit Deployment"):
-                            if None in ans.values(): st.warning("⚠️ Answer all questions!")
+                        if st.form_submit_button("Submit"):
+                            if None in ans.values(): st.warning("Answer all questions!")
                             else:
                                 score = sum(1 for i, q in enumerate(st.session_state.quiz_questions) if ans[i] == q['a'])
                                 duration = int(time.time() - st.session_state.quiz_start_time)
                                 now = datetime.now(egy_tz)
                                 log = {"Student": st.session_state.user, "Class": st.session_state.u_class, "House": st.session_state.u_house, "Score": f"{score}/10", "Duration": f"{duration}s", "Day": now.strftime("%A"), "Date": now.strftime("%Y-%m-%d"), "Time": now.strftime("%I:%M:%S %p")}
-                                save_log_to_csv(log); st.session_state.records.append(log)
-                                st.session_state.quiz_active = False; st.session_state.page = "dashboard"; st.rerun()
+                                save_log_to_csv(log); st.session_state.records.append(log); st.session_state.quiz_active = False; st.session_state.page = "dashboard"; st.rerun()
         else:
-            st.info("🎯 Practice Mode")
+            st.info("🎯 Practice Mode - Full Bank")
             sel_lesson = st.selectbox("Lesson:", list(get_questions_by_lesson().keys()))
             all_qs = get_questions_by_lesson()[sel_lesson]
-            with st.form("as_form"):
+            with st.form("practice"):
                 u_ans = {i: st.radio(f"Q{i+1}: {q['q']}", q['options'], index=None) for i, q in enumerate(all_qs)}
                 if st.form_submit_button("Check Results"):
-                    if None in u_ans.values(): st.error("❌ Fill all questions!")
+                    if None in u_ans.values(): st.error("Fill all!")
                     else:
                         score = 0
                         for i, q in enumerate(all_qs):
                             is_corr = u_ans[i] == q['a']
                             if is_corr: score += 1
                             st.markdown(f"<p class='{'correct' if is_corr else 'wrong'}'>{'✅' if is_corr else '❌'} Q{i+1}: {q['a']}</p>", unsafe_allow_html=True)
-                        st.write(f"### Score: {score}/{len(all_qs)}")
+                        st.write(f"Score: {score}/{len(all_qs)}")
 
         if st.button("Logout"): del st.session_state.user; st.rerun()
