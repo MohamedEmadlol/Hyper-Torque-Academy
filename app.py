@@ -63,7 +63,7 @@ def get_questions_by_lesson():
             {"q": "If the radius of the large piston is 4 times the small piston radius, the force multiplication is:", "options": ["4 times", "8 times", "16 times", "2 times"], "a": "16 times"},
             {"q": "A crown weighs 7.84 N in air and 6.86 N in water. Its density is:", "options": ["19.3 x 10³ kg/m³", "8.0 x 10³ kg/m³", "10.0 x 10³ kg/m³", "2.7 x 10³ kg/m³"], "a": "8.0 x 10³ kg/m³"},
             {"q": "Water flows through a pipe at 2 m/s. If the pipe narrows to 1/4 of its area, the new velocity is:", "options": ["0.5 m/s", "4 m/s", "16 m/s", "8 m/s"], "a": "8 m/s"},
-            {"q": "Iron and aluminum balls of the same VOLUME submerged in water experience:", "options": ["More force on Iron", "More force on Aluminum", "The same buoyant force", "Zero force"], "a": "The same buoyant force"},
+            {"q": "Iron and aluminum balls of the same VOLUME are submerged in water. Which experiences a greater buoyant force?", "options": ["More force on Iron", "More force on Aluminum", "Both the same", "Depends on mass"], "a": "Both the same"},
             {"q": "If pipe diameter is doubled, the cross-sectional area increases by:", "options": ["2 times", "8 times", "16 times", "4 times"], "a": "4 times"},
             {"q": "Calculate absolute pressure at 10m depth (P_atm = 1.01x10⁵ Pa, ρ=1000, g=9.8):", "options": ["1.01 x 10⁵ Pa", "1.99 x 10⁵ Pa", "0.98 x 10⁵ Pa", "2.50 x 10⁵ Pa"], "a": "1.99 x 10⁵ Pa"},
             {"q": "A boat moves from fresh water to salt water. The buoyant force:", "options": ["Increases", "Decreases", "Stays the same", "Disappears"], "a": "Stays the same"},
@@ -122,8 +122,10 @@ with st.sidebar:
         student_only = [r for r in st.session_state.records if r.get('Student') != "ADMIN_ADJUST"]
         for log in reversed(student_only[-5:]):
             day = log.get('Day', 'N/A')
+            # ⚠️ تم إضافة اسم الدرس هنا في الشريط الجانبي
             st.caption(f"📅 {log.get('Date', 'N/A')} ({day}) | {log.get('Time', 'N/A')}")
-            st.write(f"✅ **{log.get('Student', 'Unknown')}** ({log.get('Class', 'N/A')}) - `{log.get('Score', 'N/A')}`")
+            st.write(f"📚 **Lesson:** `{log.get('Lesson', 'N/A')}`")
+            st.write(f"✅ **{log.get('Student', 'Unknown')}** - `{log.get('Score', 'N/A')}`")
             st.markdown("---")
     else:
         st.write("No activity yet.")
@@ -149,6 +151,7 @@ if is_admin:
                 "Class": "SYSTEM", 
                 "House": h_sel, 
                 "Score": adj, 
+                "Lesson": "SYSTEM_ADJUST", # وسم التعديل الإداري
                 "Day": now_egy.strftime("%A"),
                 "Date": now_egy.strftime("%Y-%m-%d"), 
                 "Time": now_egy.strftime("%I:%M:%S %p")
@@ -167,7 +170,7 @@ elif st.session_state.page == "dashboard":
 
 else:
     if 'user' not in st.session_state:
-        st.markdown("<h1>⚡ STUDENT LOGIN</h1>", unsafe_allow_html=True)
+        st.title("⚡ STUDENT LOGIN")
         u_class = st.selectbox("Class:", list(STUDENT_DB.keys()))
         u_name = st.selectbox("Name:", STUDENT_DB[u_class])
         u_house = st.selectbox("House:", CLASS_HOUSES[u_class])
@@ -175,7 +178,7 @@ else:
             st.session_state.user, st.session_state.u_class, st.session_state.u_house = u_name, u_class, u_house
             st.rerun()
     else:
-        st.markdown(f"### 🎊 Welcome, {st.session_state.user} | {st.session_state.u_house}")
+        st.write(f"### Welcome, {st.session_state.user} | {st.session_state.u_house}")
         mode = st.radio("Activity:", ["Live Quiz 📝", "Assignment 📚"])
         
         if mode == "Live Quiz 📝":
@@ -203,11 +206,12 @@ else:
                         st.rerun()
                     
                     st.markdown(f"<div class='timer-box'><h3>⏳ Time: {int(remaining//60)}:{int(remaining%60):02d}</h3></div>", unsafe_allow_html=True)
+                    st.write(f"📚 **Testing on:** {st.session_state.selected_lesson}") # تنبيه للطالب
+                    
                     with st.form("quiz_form"):
                         answers = {}
                         for i, q in enumerate(st.session_state.quiz_questions):
                             st.write(f"**Q{i+1}: {q['q']}**")
-                            # ⚠️ إضافة index=None لمنع الاختيار التلقائي
                             answers[i] = st.radio("Select:", q['options'], key=f"q{i}", index=None, label_visibility="collapsed")
                         
                         if st.form_submit_button("Submit Deployment"):
@@ -216,20 +220,24 @@ else:
                             else:
                                 score = sum(1 for i, q in enumerate(st.session_state.quiz_questions) if answers[i] == q['a'])
                                 now_egy = datetime.now(egy_tz)
+                                # ⚠️ تم إضافة حقل Lesson هنا للحفظ في السجل
                                 log = {
-                                    "Student": st.session_state.user, "Class": st.session_state.u_class, 
-                                    "House": st.session_state.u_house, "Score": f"{score}/{len(st.session_state.quiz_questions)}", 
-                                    "Lesson": st.session_state.selected_lesson, "Day": now_egy.strftime("%A"),
-                                    "Date": now_egy.strftime("%Y-%m-%d"), "Time": now_egy.strftime("%I:%M:%S %p")
+                                    "Student": st.session_state.user, 
+                                    "Class": st.session_state.u_class, 
+                                    "House": st.session_state.u_house, 
+                                    "Score": f"{score}/{len(st.session_state.quiz_questions)}", 
+                                    "Lesson": st.session_state.selected_lesson, 
+                                    "Day": now_egy.strftime("%A"),
+                                    "Date": now_egy.strftime("%Y-%m-%d"), 
+                                    "Time": now_egy.strftime("%I:%M:%S %p")
                                 }
                                 save_log_to_csv(log); st.session_state.records.append(log)
                                 finished_ids.add(user_id)
                                 st.session_state.quiz_active = False; st.session_state.page = "dashboard"; st.rerun()
         else:
-            st.info("🎯 Practice Mode - All questions available for training!")
+            st.info("🎯 Practice Mode")
             lessons = list(get_questions_by_lesson().keys())
             selected_lesson = st.selectbox("Select Lesson for Practice:", lessons)
-            # عرض كل الأسئلة في الواجب
             all_qs = get_questions_by_lesson()[selected_lesson]
             with st.form("assignment_form"):
                 user_ans = {}
@@ -240,7 +248,7 @@ else:
             
             if check:
                 if None in user_ans.values():
-                    st.error("❌ لازم تختار إجابة لكل سؤال قبل التصحيح!")
+                    st.error("❌ لازم تختار إجابة لكل سؤال!")
                 else:
                     st.markdown("---")
                     score = 0
